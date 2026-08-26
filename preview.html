@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DHNN · Skill Map (preview de estructura)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --page:      #f4f4f0;
+  --surface:   #fcfcfb;
+  --surface2:  #f0f0ec;
+  --border:    #e1e0d9;
+  --ink-1:     #0b0b0b;
+  --ink-2:     #52514e;
+  --ink-muted: #898781;
+  --yellow:    #ffe033;
+  --ok:        #0ca30c;
+  --warn:      #fab219;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--page);
+  color: var(--ink-1);
+  min-height: 100vh;
+}
+
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 20;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar-brand { padding: 22px 20px 18px; border-bottom: 1px solid var(--border); }
+.brand-name { font-size: 14px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; }
+.brand-sub { font-size: 9px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-muted); margin-top: 3px; }
+.badge-draft {
+  display: inline-block; margin-top: 10px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .5px;
+  background: var(--yellow); color: var(--ink-1);
+  padding: 3px 8px; border-radius: 5px;
+}
+.sidebar-section { padding: 14px 12px 4px; }
+.sidebar-sec-label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-muted); padding: 0 8px; margin-bottom: 6px; }
+.person-item {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  margin-bottom: 2px;
+}
+.person-item:hover { background: var(--surface2); }
+.person-item.active { background: var(--ink-1); }
+.person-item.active .p-name { color: #fff; }
+.person-item.active .p-role { color: #c7c6c1; }
+.p-name { font-size: 12.5px; font-weight: 600; }
+.p-role { font-size: 10.5px; color: var(--ink-muted); }
+
+.main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+
+.topbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 14px 28px; position: sticky; top: 0; z-index: 10;
+}
+.topbar-title { font-size: 13px; font-weight: 600; }
+.topbar-subtitle { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+
+.content { padding: 24px 28px 48px; width: 100%; max-width: 1100px; }
+
+.hero {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 22px 26px;
+  display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--ink-1); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 600; flex-shrink: 0;
+}
+.hero-info { flex: 1; min-width: 200px; }
+.hero-name { font-size: 18px; font-weight: 700; }
+.hero-role { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
+.hero-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.tag {
+  font-size: 10.5px; font-weight: 500; color: var(--ink-muted);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 8px;
+}
+.hero-lider { font-size: 11.5px; color: var(--ink-muted); }
+.hero-lider strong { color: var(--ink-2); font-weight: 600; }
+
+.stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+.stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+.tile-val { font-size: 24px; font-weight: 700; line-height: 1; }
+.tile-lbl { font-size: 10.5px; color: var(--ink-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: .4px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+.card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; }
+.card-body { padding: 4px 0; }
+
+.skill-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 20px; border-bottom: 1px solid var(--border); }
+.skill-row:last-child { border-bottom: none; }
+.skill-name { font-size: 12.5px; font-weight: 500; }
+.skill-cat { font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
+.pending {
+  font-size: 10.5px; font-weight: 600; color: #7a5800;
+  background: rgba(250,178,25,.15); padding: 3px 9px; border-radius: 4px; white-space: nowrap;
+}
+
+.steps { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.step { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; color: var(--ink-2); }
+.step-n {
+  width: 20px; height: 20px; border-radius: 50%; background: var(--ink-1); color: #fff;
+  font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.note-banner {
+  background: #fff8dc; border: 1px solid #ecd98f; border-radius: 10px;
+  padding: 14px 18px; font-size: 12px; color: #6b4800; margin-bottom: 16px; line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-name">DHNN</div>
+      <div class="brand-sub">Skill Map</div>
+      <div class="badge-draft">PREVIEW · SIN DATOS REALES DE SKILL</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-sec-label">Personas (18)</div>
+      <div id="person-list"></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title">Ficha individual</div>
+      <div class="topbar-subtitle">Estructura de datos real — todavía sin autoevaluaciones cargadas</div>
+    </header>
+
+    <div class="content">
+      <div class="note-banner">
+        Esta es una <strong>preview de estructura</strong>, no la app final: muestra el roster real de DHNN
+        y las skills que le corresponderían a cada rol según la taxonomía que definimos — pero nadie
+        completó todavía su autoevaluación, así que no hay niveles 1–5 para mostrar (no quisimos inventar
+        datos de desempeño de personas reales). Cuando el flujo de autoevaluación + validación esté
+        construido, esta misma pantalla se va a llenar con datos reales.
+      </div>
+
+      <div class="hero" id="hero"></div>
+      <div class="stat-row" id="stats"></div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Skills esperadas para este rol</span></div>
+        <div class="card-body" id="skill-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Próximos pasos</span></div>
+        <div class="steps">
+          <div class="step"><span class="step-n">1</span> La persona completa su autoevaluación (nivel actual 1–5 por skill).</div>
+          <div class="step"><span class="step-n">2</span> Su líder directo valida o ajusta los niveles cargados.</div>
+          <div class="step"><span class="step-n">3</span> Con datos reales, el dashboard muestra brechas, radar por categoría y plan de desarrollo.</div>
+          <div class="step"><span class="step-n">4</span> El armado de equipos por IA ya puede cruzar skills + disponibilidad de ClickUp para sugerir gente para un proyecto.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== Taxonomía real (de SKILLS_TAXONOMY.md) ===== */
+const SOFT_SKILLS_DESIGN = ['Trabajo en equipo','Adaptabilidad','Relaciones interpersonales','Comunicación asertiva','Gestión del tiempo','Orientación a resultados','Inteligencia emocional','Gestión','Negociación','Liderazgo','Pensamiento estratégico','Gestión de conflictos'];
+const SOFT_SKILLS_PM = ['Trabajo en equipo','Adaptabilidad','Relaciones interpersonales','Comunicación asertiva','Gestión del tiempo','Orientación a resultados','Inteligencia emocional','Negociación','Gestión','Pensamiento estratégico','Gestión de conflictos','Liderazgo'];
+const IA_SKILLS = ['Prompting efectivo','Evaluación crítica del output de IA','Integración de IA al flujo de trabajo','Automatización de tareas repetitivas'];
+const LIDERAZGO_SKILLS = ['Gestión y desarrollo de equipos','Definición de OKRs / objetivos','Reclutamiento y selección','Planificación estratégica','Gestión de P&L de área/pod','Mentoría y planes de carrera'];
+
+const AREA_SKILLS = {
+  'Diseño de Producto': ['Investigación de usuarios','Wireframing y prototipado','Arquitectura de información','Diseño de interacción','Tests de usabilidad','Diseño de sistemas (design systems)','Accesibilidad (WCAG)','Figma avanzado','Data-informed design'],
+  'Diseño Visual & Branding': ['Identidad visual / diseño de marca','Tipografía','Ilustración','Motion design / microinteracciones','Diseño editorial y de presentaciones','Dirección de arte'],
+  'Desarrollo Frontend': ['HTML / CSS avanzado','JavaScript / TypeScript','React (u otro framework)','Consumo de APIs','Performance web','Testing (unitario/e2e)','Control de versiones (Git)','Accesibilidad técnica'],
+  'Desarrollo Backend & Tech': ['Diseño de APIs (REST/GraphQL)','Bases de datos','Arquitectura de sistemas','Cloud (AWS/GCP/Azure)','Seguridad de aplicaciones','CI/CD','Code review y buenas prácticas'],
+  'Project Management & Operaciones': ['Metodologías ágiles (Scrum/Kanban)','Gestión de scope, tiempos y presupuesto','Gestión de stakeholders y clientes','ClickUp / roadmapping','Gestión de riesgos','Documentación y reporting'],
+  'Business & Marketing': ['Desarrollo de negocio / prospección','Gestión de pipeline comercial (HubSpot)','Elaboración de propuestas comerciales','Análisis de mercado / competencia','Marketing digital y analítica (GA)','Pricing'],
+  'Finanzas & Administración': ['Contabilidad general','Gestión presupuestaria','P&L / análisis financiero','Facturación y cobranzas','Cumplimiento normativo/fiscal','Administración de RRHH'],
+  'People & Culture': ['Reclutamiento y selección','Employer branding','Gestión de clima organizacional','Comunicación interna','Administración de beneficios','Legislación laboral básica'],
+};
+
+/* ===== Roster real (roster_DRAFT.csv) ===== */
+const PEOPLE = [
+  {name:'Diego Trefny', role:'Director Comercial', area:'Business & Marketing', banda:'Management', seniority:'', lider:'Lucas Davison'},
+  {name:'Patricio Euillades', role:'Responsable Admin', area:'Finanzas & Administración', banda:'Staff', seniority:'', lider:'Lucas Davison'},
+  {name:'Luis Santiago Botto', role:'Product Designer Ssr.', area:'Diseño de Producto', banda:'Diseñador', seniority:'Ssr', lider:'Sabrina García Demestre'},
+  {name:'Matías Jaubet', role:'Front End Dev Sr.', area:'Desarrollo Frontend', banda:'Desarrollador', seniority:'Sr', lider:'Juan Pablo Da Rocha'},
+  {name:'Leandro Ferrara', role:'Tech Support', area:'Desarrollo Backend & Tech', banda:'Staff', seniority:'', lider:'Juan Pablo Da Rocha'},
+  {name:'Agustín Zalazar', role:'Tech Lead', area:'Desarrollo Backend & Tech', banda:'Lead', seniority:'Líder', lider:'Juan Pablo Da Rocha'},
+  {name:'Julio Lastra', role:'Project Manager SSr', area:'Project Management & Operaciones', banda:'PM', seniority:'Ssr', lider:'Sabrina García Demestre'},
+  {name:'Paula Quiroga', role:'Project Manager', area:'Project Management & Operaciones', banda:'PM', seniority:'', lider:'Sabrina García Demestre'},
+  {name:'Juan Pablo Da Rocha', role:'CTO', area:'Desarrollo Backend & Tech', banda:'Management', seniority:'Líder', lider:'Lucas Davison'},
+  {name:'Rocío Doukler', role:'Lead Product Design', area:'Diseño de Producto', banda:'Lead', seniority:'Líder', lider:'Lucas Davison'},
+  {name:'María Julia Murua', role:'CFO', area:'Finanzas & Administración', banda:'Management', seniority:'Líder', lider:'Lucas Davison'},
+  {name:'Sabrina García Demestre', role:'Design Ops', area:'Diseño de Producto', banda:'Management', seniority:'', lider:'Lucas Davison'},
+  {name:'Camila Perchik', role:'Designer', area:'Diseño de Producto', banda:'Diseñador', seniority:'', lider:'Sabrina García Demestre'},
+  {name:'Pedro Astelarra', role:'Director de Arte', area:'Diseño Visual & Branding', banda:'Lead', seniority:'Líder', lider:'Lucas Davison'},
+  {name:'Melisa Fernández', role:'People Ops Lead', area:'People & Culture', banda:'Lead', seniority:'Líder', lider:'Lucas Davison'},
+  {name:'Rocio Castillo', role:'Head of Business Development', area:'Business & Marketing', banda:'Lead', seniority:'Líder', lider:'Lucas Davison'},
+  {name:'Emiliano Carbone', role:'Visual/Brand Designer Sr.', area:'Diseño Visual & Branding', banda:'Diseñador', seniority:'Sr', lider:'Sabrina García Demestre'},
+  {name:'Agustín Tello', role:'Animador', area:'Diseño Visual & Branding', banda:'Diseñador', seniority:'', lider:'Sabrina García Demestre'},
+];
+
+const LEADER_BANDAS = ['Management','Lead'];
+const PM_TRACK_BANDAS = ['PM','Management','Lead'];
+
+function initials(name) {
+  return name.split(' ').filter(Boolean).slice(0,2).map(w => w[0]).join('').toUpperCase();
+}
+
+function skillsFor(p) {
+  const hard = (AREA_SKILLS[p.area] || []).map(n => ({name:n, cat:p.area}));
+  const ia = IA_SKILLS.map(n => ({name:n, cat:'IA & Automatización'}));
+  const soft = (PM_TRACK_BANDAS.includes(p.banda) ? SOFT_SKILLS_PM : SOFT_SKILLS_DESIGN).map(n => ({name:n, cat:'Habilidades Blandas'}));
+  const lead = LEADER_BANDAS.includes(p.banda) ? LIDERAZGO_SKILLS.map(n => ({name:n, cat:'Liderazgo & Gestión de personas'})) : [];
+  return [...hard, ...ia, ...soft, ...lead];
+}
+
+let current = 0;
+
+function renderPersonList() {
+  document.getElementById('person-list').innerHTML = PEOPLE.map((p,i) => `
+    <div class="person-item${i===current?' active':''}" onclick="selectPerson(${i})">
+      <span class="p-name">${p.name}</span>
+      <span class="p-role">${p.role}</span>
+    </div>`).join('');
+}
+
+function renderHero(p) {
+  document.getElementById('hero').innerHTML = `
+    <div class="avatar">${initials(p.name)}</div>
+    <div class="hero-info">
+      <div class="hero-name">${p.name}</div>
+      <div class="hero-role">${p.role}</div>
+      <div class="hero-tags">
+        <span class="tag">${p.area}</span>
+        ${p.seniority ? `<span class="tag">${p.seniority}</span>` : ''}
+        <span class="tag">${p.banda}</span>
+      </div>
+    </div>
+    <div class="hero-lider">Líder directo<br><strong>${p.lider}</strong></div>`;
+}
+
+function renderStats(skills) {
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-tile"><div class="tile-val">${skills.length}</div><div class="tile-lbl">Skills a evaluar</div></div>
+    <div class="stat-tile"><div class="tile-val" style="color:var(--warn)">0</div><div class="tile-lbl">Autoevaluaciones completas</div></div>
+    <div class="stat-tile"><div class="tile-val" style="color:var(--ink-muted)">0</div><div class="tile-lbl">Validaciones del líder</div></div>`;
+}
+
+function renderSkills(skills) {
+  document.getElementById('skill-list').innerHTML = skills.map(s => `
+    <div class="skill-row">
+      <div><div class="skill-name">${s.name}</div><div class="skill-cat">${s.cat}</div></div>
+      <span class="pending">Sin autoevaluar</span>
+    </div>`).join('');
+}
+
+function selectPerson(i) {
+  current = i;
+  const p = PEOPLE[i];
+  const skills = skillsFor(p);
+  renderPersonList();
+  renderHero(p);
+  renderStats(skills);
+  renderSkills(skills);
+}
+
+selectPerson(0);
+</script>
+</body>
+</html>
