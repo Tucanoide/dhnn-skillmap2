@@ -124,6 +124,12 @@ Analytics).
 - CI/CD
 - Code review y buenas prácticas
 
+**Posiciones dentro de Desarrollo:** Frontend, Backend y **Fullstack**
+(agregado). Fullstack no es una categoría de skills nueva — es una
+posición que combina skills de 2.3 (Frontend) y 2.4 (Backend & Tech), y
+así se refleja en el sistema (la persona tiene niveles cargados en
+ambas secciones).
+
 ### 2.5 Project Management & Operaciones
 - Metodologías ágiles (Scrum/Kanban)
 - Gestión de scope, tiempos y presupuesto
