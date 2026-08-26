@@ -3,200 +3,301 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DHNN · Skill Map (preview de estructura)</title>
+<title>DHNN · Skill Map</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --page:      #f4f4f0;
-  --surface:   #fcfcfb;
-  --surface2:  #f0f0ec;
-  --border:    #e1e0d9;
-  --ink-1:     #0b0b0b;
-  --ink-2:     #52514e;
-  --ink-muted: #898781;
-  --yellow:    #ffe033;
-  --ok:        #0ca30c;
-  --warn:      #fab219;
+  --page:        #f4f4f0;
+  --surface:     #fcfcfb;
+  --surface2:    #f0f0ec;
+  --border:      #e1e0d9;
+  --border-hi:   #c3c2b7;
+  --ink-1:       #0b0b0b;
+  --ink-2:       #52514e;
+  --ink-muted:   #898781;
+  --lv1:         #cde2fb;
+  --lv2:         #86b6ef;
+  --lv3:         #3987e5;
+  --lv4:         #256abf;
+  --lv5:         #0d366b;
+  --ok:          #0ca30c;
+  --warn:        #fab219;
+  --crit:        #d03b3b;
+  --yellow:      #ffe033;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; }
-html { font-size: 14px; }
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: var(--page);
-  color: var(--ink-1);
-  min-height: 100vh;
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:14px}
+body{
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--page);
+  color:var(--ink-1);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
 }
 
-.app { display: flex; min-height: 100vh; }
+.app{display:flex;min-height:100vh}
 
-.sidebar {
-  width: 240px; flex-shrink: 0;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  position: fixed; top: 0; left: 0; bottom: 0; z-index: 20;
-  display: flex; flex-direction: column;
-  overflow-y: auto;
+.sidebar{
+  width:220px;flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;z-index:20;
+  overflow-y:auto;
 }
-.sidebar-brand { padding: 22px 20px 18px; border-bottom: 1px solid var(--border); }
-.brand-name { font-size: 14px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; }
-.brand-sub { font-size: 9px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-muted); margin-top: 3px; }
-.badge-draft {
-  display: inline-block; margin-top: 10px;
-  font-size: 9.5px; font-weight: 700; letter-spacing: .5px;
-  background: var(--yellow); color: var(--ink-1);
-  padding: 3px 8px; border-radius: 5px;
-}
-.sidebar-section { padding: 14px 12px 4px; }
-.sidebar-sec-label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-muted); padding: 0 8px; margin-bottom: 6px; }
-.person-item {
-  display: flex; flex-direction: column; gap: 1px;
-  padding: 8px 10px; border-radius: 6px; cursor: pointer;
-  margin-bottom: 2px;
-}
-.person-item:hover { background: var(--surface2); }
-.person-item.active { background: var(--ink-1); }
-.person-item.active .p-name { color: #fff; }
-.person-item.active .p-role { color: #c7c6c1; }
-.p-name { font-size: 12.5px; font-weight: 600; }
-.p-role { font-size: 10.5px; color: var(--ink-muted); }
+.sidebar-brand{padding:22px 20px 14px;border-bottom:1px solid var(--border)}
+.brand-name{font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--ink-1)}
+.brand-sub{font-size:9px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-muted);margin-top:3px}
+.badge-draft{display:inline-block;margin-top:10px;font-size:9px;font-weight:700;letter-spacing:.4px;background:var(--yellow);color:var(--ink-1);padding:3px 7px;border-radius:5px}
+.sidebar-section{padding:14px 12px 4px}
+.sidebar-sec-label{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-muted);padding:0 8px;margin-bottom:4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:12.5px;color:var(--ink-2);transition:background .12s,color .12s;font-weight:400;user-select:none}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav-item:hover{background:var(--surface2);color:var(--ink-1)}
+.nav-item.active{background:var(--ink-1);color:#fff;font-weight:500}
+.nav-item.active svg{stroke:#fff}
+.person-item{display:flex;flex-direction:column;gap:1px;padding:7px 10px;border-radius:6px;cursor:pointer;margin-bottom:1px}
+.person-item:hover{background:var(--surface2)}
+.person-item.active{background:var(--ink-1)}
+.person-item.active .p-name{color:#fff}
+.person-item.active .p-role{color:#c7c6c1}
+.p-name{font-size:12px;font-weight:600}
+.p-role{font-size:10px;color:var(--ink-muted)}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--ink-muted)}
 
-.main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column}
 
-.topbar {
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 14px 28px; position: sticky; top: 0; z-index: 10;
-}
-.topbar-title { font-size: 13px; font-weight: 600; }
-.topbar-subtitle { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;flex-wrap:wrap;gap:10px}
+.topbar-left{display:flex;flex-direction:column;gap:1px}
+.topbar-title{font-size:13px;font-weight:600;color:var(--ink-1)}
+.topbar-subtitle{font-size:11px;color:var(--ink-muted)}
 
-.content { padding: 24px 28px 48px; width: 100%; max-width: 1100px; }
+.content{padding:24px 28px 48px;width:100%}
 
-.hero {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 22px 26px;
-  display: flex; align-items: center; gap: 20px; margin-bottom: 16px; flex-wrap: wrap;
-}
-.avatar {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--ink-1); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; font-weight: 600; flex-shrink: 0;
-}
-.hero-info { flex: 1; min-width: 200px; }
-.hero-name { font-size: 18px; font-weight: 700; }
-.hero-role { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
-.hero-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-.tag {
-  font-size: 10.5px; font-weight: 500; color: var(--ink-muted);
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 4px; padding: 2px 8px;
-}
-.hero-lider { font-size: 11.5px; color: var(--ink-muted); }
-.hero-lider strong { color: var(--ink-2); font-weight: 600; }
+.note-banner{background:#fff8dc;border:1px solid #ecd98f;border-radius:10px;padding:12px 18px;font-size:11.5px;color:#6b4800;margin-bottom:16px;line-height:1.6}
 
-.stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
-.stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
-.tile-val { font-size: 24px; font-weight: 700; line-height: 1; }
-.tile-lbl { font-size: 10.5px; color: var(--ink-muted); margin-top: 6px; text-transform: uppercase; letter-spacing: .4px; }
+.hero{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px 26px;display:flex;align-items:center;gap:20px;margin-bottom:16px;flex-wrap:wrap}
+.avatar{width:56px;height:56px;border-radius:50%;background:var(--ink-1);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0;letter-spacing:.5px}
+.hero-info{flex:1;min-width:200px}
+.hero-name{font-size:18px;font-weight:700;color:var(--ink-1)}
+.hero-role{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.hero-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tag{display:inline-block;font-size:10.5px;font-weight:500;color:var(--ink-muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;letter-spacing:.3px}
+.hero-kpis{display:flex;gap:28px;flex-shrink:0}
+.kpi{text-align:right}
+.kpi-val{font-size:26px;font-weight:700;color:var(--ink-1);font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-lbl{font-size:10px;color:var(--ink-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
 
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
-.card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; }
-.card-body { padding: 4px 0; }
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.tile-val{font-size:24px;font-weight:700;color:var(--ink-1);font-variant-numeric:tabular-nums;line-height:1}
+.tile-lbl{font-size:10.5px;color:var(--ink-muted);margin-top:6px;text-transform:uppercase;letter-spacing:.4px}
+.tile-sub{font-size:11px;color:var(--ink-2);margin-top:3px}
 
-.skill-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 20px; border-bottom: 1px solid var(--border); }
-.skill-row:last-child { border-bottom: none; }
-.skill-name { font-size: 12.5px; font-weight: 500; }
-.skill-cat { font-size: 10px; color: var(--ink-muted); margin-top: 1px; }
-.pending {
-  font-size: 10.5px; font-weight: 600; color: #7a5800;
-  background: rgba(250,178,25,.15); padding: 3px 9px; border-radius: 4px; white-space: nowrap;
-}
+.grid-6-4{display:grid;grid-template-columns:6fr 4fr;gap:12px;margin-bottom:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 
-.steps { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
-.step { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; color: var(--ink-2); }
-.step-n {
-  width: 20px; height: 20px; border-radius: 50%; background: var(--ink-1); color: #fff;
-  font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.card-header{padding:14px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.card-title{font-size:11px;font-weight:600;color:var(--ink-1);text-transform:uppercase;letter-spacing:.7px}
+.card-body{padding:16px 20px;flex:1}
 
-.note-banner {
-  background: #fff8dc; border: 1px solid #ecd98f; border-radius: 10px;
-  padding: 14px 18px; font-size: 12px; color: #6b4800; margin-bottom: 16px; line-height: 1.6;
-}
+.cat-tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.cat-tab{padding:10px 16px;font-size:12px;font-weight:500;color:var(--ink-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:color .12s}
+.cat-tab:hover{color:var(--ink-1)}
+.cat-tab.active{color:var(--ink-1);border-bottom-color:var(--ink-1);font-weight:600}
+.cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+.skill-list{display:flex;flex-direction:column;overflow-y:auto;max-height:280px}
+.skill-row{display:grid;grid-template-columns:168px 1fr 130px 100px;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid var(--border)}
+.skill-row:last-child{border-bottom:none}
+.skill-row:hover{background:var(--surface2)}
+.skill-name{font-size:12.5px;color:var(--ink-1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-wrap{position:relative;height:5px;background:var(--surface2);border-radius:3px;overflow:visible}
+.bar-fill{height:100%;border-radius:3px;transition:width .35s ease}
+.bar-target{position:absolute;top:-5px;width:2px;height:15px;background:var(--ink-muted);border-radius:1px}
+.level-txt{font-size:11px;font-weight:500;color:var(--ink-2);white-space:nowrap}
+.gap-badge{display:inline-flex;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.gap-none{background:rgba(12,163,12,.10);color:#005c00}
+.gap-pending{background:var(--surface2);color:var(--ink-muted)}
+
+.lv-legend{display:flex;gap:10px;padding:10px 20px;border-top:1px solid var(--border);flex-wrap:wrap;flex-shrink:0}
+.lv-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink-2)}
+.lv-swatch{width:18px;height:5px;border-radius:3px}
+
+.radar-wrap{padding:12px 16px;display:flex;align-items:center;justify-content:center;flex:1}
+.radar-legend{display:flex;gap:16px;justify-content:center;padding:10px 20px 14px;border-top:1px solid var(--border);flex-shrink:0}
+.rl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-2)}
+.rl-line{width:20px;height:3px;border-radius:2px}
+.rl-dashed{border-top:2px dashed var(--ink-muted);width:20px}
+
+.gap-list{display:flex;flex-direction:column;overflow-y:auto;max-height:300px}
+.gap-item{display:grid;grid-template-columns:150px 1fr 32px 90px;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)}
+.gap-item:last-child{border-bottom:none}
+.gap-item:hover{background:var(--surface2)}
+.gap-skill{font-size:12px;font-weight:500;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gap-bar-wrap{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.gap-bar-fill{height:100%;border-radius:3px;opacity:.75}
+.gap-n{font-size:12px;font-weight:700;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.gap-cat{font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;white-space:nowrap;text-align:center}
+
+.empty-state{padding:36px 24px;text-align:center;color:var(--ink-muted);font-size:12.5px;line-height:1.7}
+.empty-state strong{color:var(--ink-2)}
+
+.quest-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:var(--border);border-radius:0 0 10px 10px;overflow:hidden;flex:1}
+.quest-col{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.quest-col-hdr{display:flex;align-items:baseline;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:2px;flex-shrink:0}
+.quest-pct{font-size:22px;font-weight:700;color:var(--ink-1)}
+.quest-col-title{font-size:11px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.5px}
+.quest-empty{font-size:11.5px;color:var(--ink-muted);padding:10px 0;line-height:1.6}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:2px}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-name">DHNN</div>
-      <div class="brand-sub">Skill Map</div>
-      <div class="badge-draft">PREVIEW · SIN DATOS REALES DE SKILL</div>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-sec-label">Personas (18)</div>
-      <div id="person-list"></div>
-    </div>
-  </aside>
 
-  <div class="main">
-    <header class="topbar">
-      <div class="topbar-title">Ficha individual</div>
-      <div class="topbar-subtitle">Estructura de datos real — todavía sin autoevaluaciones cargadas</div>
-    </header>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-name">DHNN</div>
+    <div class="brand-sub">Skill Map</div>
+    <div class="badge-draft">PREVIEW · SIN AUTOEVALUACIONES</div>
+  </div>
 
-    <div class="content">
-      <div class="note-banner">
-        Esta es una <strong>preview de estructura</strong>, no la app final: muestra el roster real de DHNN
-        y las skills que le corresponderían a cada rol según la taxonomía que definimos — pero nadie
-        completó todavía su autoevaluación, así que no hay niveles 1–5 para mostrar (no quisimos inventar
-        datos de desempeño de personas reales). Cuando el flujo de autoevaluación + validación esté
-        construido, esta misma pantalla se va a llenar con datos reales.
+  <div class="sidebar-section">
+    <div class="sidebar-sec-label">Vistas</div>
+    <div class="nav-item active" onclick="setView('dashboard')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="setView('inventario')">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      Inventario
+    </div>
+    <div class="nav-item" onclick="setView('brechas')">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Brechas
+    </div>
+    <div class="nav-item" onclick="setView('plan')">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Plan de acción
+    </div>
+  </div>
+
+  <div class="sidebar-section" style="margin-top:8px">
+    <div class="sidebar-sec-label">Personas (18)</div>
+    <div id="person-list"></div>
+  </div>
+
+  <div class="sidebar-footer">People &amp; Culture · 2026</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topbar-title">Dashboard · Skill Map</div>
+      <div class="topbar-subtitle">Roster y taxonomía reales · niveles pendientes de autoevaluación</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="note-banner" id="note-banner"></div>
+
+    <div id="view-dashboard">
+      <div class="hero" id="hero-card"></div>
+      <div class="stat-row" id="stat-row"></div>
+
+      <div class="grid-6-4">
+        <div class="card" id="card-inventario">
+          <div class="card-header">
+            <span class="card-title">Inventario de Skills</span>
+          </div>
+          <div class="cat-tabs" id="cat-tabs"></div>
+          <div class="skill-list" id="skill-list"></div>
+          <div class="lv-legend">
+            <div class="lv-item"><div class="lv-swatch" style="background:var(--lv1)"></div>Aprendiz</div>
+            <div class="lv-item"><div class="lv-swatch" style="background:var(--lv2)"></div>Iniciado</div>
+            <div class="lv-item"><div class="lv-swatch" style="background:var(--lv3)"></div>Competente</div>
+            <div class="lv-item"><div class="lv-swatch" style="background:var(--lv4)"></div>Avanzado</div>
+            <div class="lv-item"><div class="lv-swatch" style="background:var(--lv5)"></div>Maestro</div>
+            <div class="lv-item" style="margin-left:8px"><div style="width:2px;height:14px;background:var(--ink-muted);border-radius:1px"></div>Objetivo</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Vista por categoría</span></div>
+          <div class="radar-wrap" style="height:300px"><canvas id="radar-chart"></canvas></div>
+          <div class="radar-legend">
+            <div class="rl-item"><div class="rl-line" style="background:#2a78d6;opacity:.7"></div><span>Nivel actual</span></div>
+            <div class="rl-item"><div class="rl-dashed"></div><span>Objetivo del rol</span></div>
+          </div>
+        </div>
       </div>
 
-      <div class="hero" id="hero"></div>
-      <div class="stat-row" id="stats"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Brechas prioritarias</span>
+            <span style="font-size:10px;color:var(--ink-muted)">actual → objetivo</span>
+          </div>
+          <div id="gap-list"></div>
+        </div>
 
-      <div class="card">
-        <div class="card-header"><span class="card-title">Skills esperadas para este rol</span></div>
-        <div class="card-body" id="skill-list"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><span class="card-title">Próximos pasos</span></div>
-        <div class="steps">
-          <div class="step"><span class="step-n">1</span> La persona completa su autoevaluación (nivel actual 1–5 por skill).</div>
-          <div class="step"><span class="step-n">2</span> Su líder directo valida o ajusta los niveles cargados.</div>
-          <div class="step"><span class="step-n">3</span> Con datos reales, el dashboard muestra brechas, radar por categoría y plan de desarrollo.</div>
-          <div class="step"><span class="step-n">4</span> El armado de equipos por IA ya puede cruzar skills + disponibilidad de ClickUp para sugerir gente para un proyecto.</div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Plan de acción</span>
+            <span style="font-size:10px;color:var(--ink-muted)">Modelo 70 / 20 / 10</span>
+          </div>
+          <div class="quest-cols" id="quest-cols"></div>
         </div>
       </div>
     </div>
+
   </div>
+</div>
 </div>
 
 <script>
-/* ===== Taxonomía real (de SKILLS_TAXONOMY.md) ===== */
+/* ══════════════ TAXONOMÍA REAL (SKILLS_TAXONOMY.md) ══════════════ */
+
+const CAT_META = {
+  'Diseño de Producto':                { color:'#2a78d6' },
+  'Diseño Visual & Branding':          { color:'#eb6834' },
+  'Desarrollo Frontend':               { color:'#00b8d9' },
+  'Desarrollo Backend & Tech':         { color:'#8a3ffc' },
+  'Project Management & Operaciones':  { color:'#6c5ce7' },
+  'Business & Marketing':              { color:'#e87ba4' },
+  'Finanzas & Administración':         { color:'#d63384' },
+  'People & Culture':                  { color:'#c2185b' },
+  'Habilidades Blandas':               { color:'#1baf7a' },
+  'IA & Automatización':               { color:'#eda100' },
+  'Liderazgo & Gestión de personas':   { color:'#b0790a' },
+};
+
 const SOFT_SKILLS_DESIGN = ['Trabajo en equipo','Adaptabilidad','Relaciones interpersonales','Comunicación asertiva','Gestión del tiempo','Orientación a resultados','Inteligencia emocional','Gestión','Negociación','Liderazgo','Pensamiento estratégico','Gestión de conflictos'];
 const SOFT_SKILLS_PM = ['Trabajo en equipo','Adaptabilidad','Relaciones interpersonales','Comunicación asertiva','Gestión del tiempo','Orientación a resultados','Inteligencia emocional','Negociación','Gestión','Pensamiento estratégico','Gestión de conflictos','Liderazgo'];
 const IA_SKILLS = ['Prompting efectivo','Evaluación crítica del output de IA','Integración de IA al flujo de trabajo','Automatización de tareas repetitivas'];
 const LIDERAZGO_SKILLS = ['Gestión y desarrollo de equipos','Definición de OKRs / objetivos','Reclutamiento y selección','Planificación estratégica','Gestión de P&L de área/pod','Mentoría y planes de carrera'];
 
 const AREA_SKILLS = {
-  'Diseño de Producto': ['Investigación de usuarios','Wireframing y prototipado','Arquitectura de información','Diseño de interacción','Tests de usabilidad','Diseño de sistemas (design systems)','Accesibilidad (WCAG)','Figma avanzado','Data-informed design'],
-  'Diseño Visual & Branding': ['Identidad visual / diseño de marca','Tipografía','Ilustración','Motion design / microinteracciones','Diseño editorial y de presentaciones','Dirección de arte'],
-  'Desarrollo Frontend': ['HTML / CSS avanzado','JavaScript / TypeScript','React (u otro framework)','Consumo de APIs','Performance web','Testing (unitario/e2e)','Control de versiones (Git)','Accesibilidad técnica'],
-  'Desarrollo Backend & Tech': ['Diseño de APIs (REST/GraphQL)','Bases de datos','Arquitectura de sistemas','Cloud (AWS/GCP/Azure)','Seguridad de aplicaciones','CI/CD','Code review y buenas prácticas'],
-  'Project Management & Operaciones': ['Metodologías ágiles (Scrum/Kanban)','Gestión de scope, tiempos y presupuesto','Gestión de stakeholders y clientes','ClickUp / roadmapping','Gestión de riesgos','Documentación y reporting'],
-  'Business & Marketing': ['Desarrollo de negocio / prospección','Gestión de pipeline comercial (HubSpot)','Elaboración de propuestas comerciales','Análisis de mercado / competencia','Marketing digital y analítica (GA)','Pricing'],
-  'Finanzas & Administración': ['Contabilidad general','Gestión presupuestaria','P&L / análisis financiero','Facturación y cobranzas','Cumplimiento normativo/fiscal','Administración de RRHH'],
-  'People & Culture': ['Reclutamiento y selección','Employer branding','Gestión de clima organizacional','Comunicación interna','Administración de beneficios','Legislación laboral básica'],
+  'Diseño de Producto': ['Investigación de usuarios','Wireframing y prototipado','Arquitectura de información','Diseño de interacción','Tests de usabilidad','Diseño de sistemas','Accesibilidad (WCAG)','Figma avanzado'],
+  'Diseño Visual & Branding': ['Identidad visual / marca','Tipografía','Ilustración','Motion design','Diseño editorial','Dirección de arte'],
+  'Desarrollo Frontend': ['HTML / CSS avanzado','JavaScript / TypeScript','React','Consumo de APIs','Performance web','Testing','Control de versiones (Git)','Accesibilidad técnica'],
+  'Desarrollo Backend & Tech': ['Diseño de APIs','Bases de datos','Arquitectura de sistemas','Cloud','Seguridad de aplicaciones','CI/CD','Code review'],
+  'Project Management & Operaciones': ['Metodologías ágiles','Gestión de scope y presupuesto','Gestión de stakeholders','ClickUp / roadmapping','Gestión de riesgos','Reporting de proyecto'],
+  'Business & Marketing': ['Desarrollo de negocio','Pipeline comercial (HubSpot)','Propuestas comerciales','Análisis de mercado','Marketing digital / GA','Pricing'],
+  'Finanzas & Administración': ['Contabilidad general','Gestión presupuestaria','P&L / análisis financiero','Facturación y cobranzas','Cumplimiento normativo','Administración de RRHH'],
+  'People & Culture': ['Reclutamiento y selección','Employer branding','Clima organizacional','Comunicación interna','Administración de beneficios','Legislación laboral'],
 };
 
-/* ===== Roster real (roster_DRAFT.csv) ===== */
+/* ══════════════ ROSTER REAL (roster_DRAFT.csv) ══════════════ */
+
 const PEOPLE = [
   {name:'Diego Trefny', role:'Director Comercial', area:'Business & Marketing', banda:'Management', seniority:'', lider:'Lucas Davison'},
   {name:'Patricio Euillades', role:'Responsable Admin', area:'Finanzas & Administración', banda:'Staff', seniority:'', lider:'Lucas Davison'},
@@ -220,70 +321,195 @@ const PEOPLE = [
 
 const LEADER_BANDAS = ['Management','Lead'];
 const PM_TRACK_BANDAS = ['PM','Management','Lead'];
+const LEVELS = ['Sin autoevaluar','Aprendiz','Iniciado','Competente','Avanzado','Maestro'];
+const LEVEL_COLORS = ['#e1e0d9','#cde2fb','#86b6ef','#3987e5','#256abf','#0d366b'];
 
-function initials(name) {
-  return name.split(' ').filter(Boolean).slice(0,2).map(w => w[0]).join('').toUpperCase();
+/* Nivel objetivo por banda/seniority — decisión de diseño de rol, no un
+   dato personal. Ver SKILLS_TAXONOMY.md sección 1 para la lógica de
+   progresión por antigüedad. */
+function targetFor(p) {
+  if (p.seniority === 'Sr' || p.seniority === 'Líder' || LEADER_BANDAS.includes(p.banda)) return 5;
+  if (p.seniority === 'Ssr') return 4;
+  return 3;
 }
 
-function skillsFor(p) {
-  const hard = (AREA_SKILLS[p.area] || []).map(n => ({name:n, cat:p.area}));
-  const ia = IA_SKILLS.map(n => ({name:n, cat:'IA & Automatización'}));
-  const soft = (PM_TRACK_BANDAS.includes(p.banda) ? SOFT_SKILLS_PM : SOFT_SKILLS_DESIGN).map(n => ({name:n, cat:'Habilidades Blandas'}));
-  const lead = LEADER_BANDAS.includes(p.banda) ? LIDERAZGO_SKILLS.map(n => ({name:n, cat:'Liderazgo & Gestión de personas'})) : [];
-  return [...hard, ...ia, ...soft, ...lead];
+function initials(name){ return name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+function buildSkills(p) {
+  const target = targetFor(p);
+  const cats = [];
+  cats.push({cat:p.area, items:(AREA_SKILLS[p.area]||[])});
+  cats.push({cat:'Habilidades Blandas', items:(PM_TRACK_BANDAS.includes(p.banda) ? SOFT_SKILLS_PM : SOFT_SKILLS_DESIGN)});
+  cats.push({cat:'IA & Automatización', items:IA_SKILLS});
+  if (LEADER_BANDAS.includes(p.banda)) cats.push({cat:'Liderazgo & Gestión de personas', items:LIDERAZGO_SKILLS});
+  const skills = [];
+  cats.forEach(c => c.items.forEach(name => skills.push({name, cat:c.cat, current:0, target})));
+  return skills;
 }
 
-let current = 0;
+/* ══════════════ STATE ══════════════ */
+let currentPerson = 0;
+let currentCat = null;
+let radarChart = null;
 
-function renderPersonList() {
+function gap(s){ return Math.max(0, s.target - s.current); }
+
+function catsOf(skills){
+  const seen = [];
+  skills.forEach(s => { if (!seen.includes(s.cat)) seen.push(s.cat); });
+  return seen;
+}
+
+function avgByCat(skills, cats){
+  return cats.map(c => {
+    const items = skills.filter(s => s.cat === c);
+    if (!items.length) return {current:0, target:0};
+    return {
+      current: items.reduce((a,s)=>a+s.current,0)/items.length,
+      target: items.reduce((a,s)=>a+s.target,0)/items.length,
+    };
+  });
+}
+
+/* ══════════════ RENDER ══════════════ */
+function renderAll(){
+  const p = PEOPLE[currentPerson];
+  const skills = buildSkills(p);
+  document.getElementById('note-banner').innerHTML = `Esta es una <strong>preview de estructura</strong> con el roster real de DHNN. Los niveles <strong>objetivo</strong> reflejan lo esperado para el rol/seniority (definición de puesto, no un dato personal). Los niveles <strong>actuales</strong> están en 0 porque todavía nadie completó su autoevaluación — no inventamos desempeño de personas reales.`;
+  renderPersonList();
+  renderHero(p, skills);
+  renderStats(p, skills);
+  renderInventario(skills, null);
+  renderRadar(skills);
+  renderGaps(skills);
+  renderPlan();
+}
+
+function renderPersonList(){
   document.getElementById('person-list').innerHTML = PEOPLE.map((p,i) => `
-    <div class="person-item${i===current?' active':''}" onclick="selectPerson(${i})">
+    <div class="person-item${i===currentPerson?' active':''}" onclick="selectPerson(${i})">
       <span class="p-name">${p.name}</span>
       <span class="p-role">${p.role}</span>
     </div>`).join('');
 }
 
-function renderHero(p) {
-  document.getElementById('hero').innerHTML = `
+function renderHero(p, skills){
+  document.getElementById('hero-card').innerHTML = `
     <div class="avatar">${initials(p.name)}</div>
     <div class="hero-info">
       <div class="hero-name">${p.name}</div>
-      <div class="hero-role">${p.role}</div>
+      <div class="hero-role">${p.role} · líder directo: ${p.lider}</div>
       <div class="hero-tags">
         <span class="tag">${p.area}</span>
         ${p.seniority ? `<span class="tag">${p.seniority}</span>` : ''}
         <span class="tag">${p.banda}</span>
       </div>
     </div>
-    <div class="hero-lider">Líder directo<br><strong>${p.lider}</strong></div>`;
+    <div class="hero-kpis">
+      <div class="kpi"><div class="kpi-val">${skills.length}</div><div class="kpi-lbl">Skills mapeados</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--ink-muted)">0</div><div class="kpi-lbl">Autoevaluados</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--ink-muted)">—</div><div class="kpi-lbl">Gap total</div></div>
+    </div>`;
 }
 
-function renderStats(skills) {
-  document.getElementById('stats').innerHTML = `
-    <div class="stat-tile"><div class="tile-val">${skills.length}</div><div class="tile-lbl">Skills a evaluar</div></div>
-    <div class="stat-tile"><div class="tile-val" style="color:var(--warn)">0</div><div class="tile-lbl">Autoevaluaciones completas</div></div>
-    <div class="stat-tile"><div class="tile-val" style="color:var(--ink-muted)">0</div><div class="tile-lbl">Validaciones del líder</div></div>`;
-}
-
-function renderSkills(skills) {
-  document.getElementById('skill-list').innerHTML = skills.map(s => `
-    <div class="skill-row">
-      <div><div class="skill-name">${s.name}</div><div class="skill-cat">${s.cat}</div></div>
-      <span class="pending">Sin autoevaluar</span>
+function renderStats(p, skills){
+  const cats = catsOf(skills);
+  const avgs = avgByCat(skills, cats);
+  document.getElementById('stat-row').innerHTML = cats.map((c,i) => `
+    <div class="stat-tile">
+      <div class="tile-val" style="color:var(--ink-muted)">0<span style="font-size:14px;font-weight:400"> / ${avgs[i].target.toFixed(1)}</span></div>
+      <div class="tile-lbl">${c}</div>
+      <div style="margin-top:8px;height:3px;background:var(--surface2);border-radius:2px"></div>
+      <div class="tile-sub" style="margin-top:4px;color:var(--ink-muted)">Sin autoevaluar</div>
     </div>`).join('');
 }
 
-function selectPerson(i) {
-  current = i;
-  const p = PEOPLE[i];
-  const skills = skillsFor(p);
-  renderPersonList();
-  renderHero(p);
-  renderStats(skills);
-  renderSkills(skills);
+function renderInventario(skills, activeCat){
+  const cats = catsOf(skills);
+  document.getElementById('cat-tabs').innerHTML = `
+    <div class="cat-tab${activeCat===null?' active':''}" onclick="setCat(null)">Todas <span style="color:var(--ink-muted);font-weight:400">(${skills.length})</span></div>` +
+    cats.map(c => {
+      const count = skills.filter(s=>s.cat===c).length;
+      const meta = CAT_META[c] || {color:'#999'};
+      return `<div class="cat-tab${activeCat===c?' active':''}" onclick="setCat('${c.replace(/'/g,"\\'")}')">
+        <span class="cat-dot" style="background:${meta.color}"></span>${c}
+        <span style="color:var(--ink-muted);font-weight:400">(${count})</span>
+      </div>`;
+    }).join('');
+
+  const filtered = activeCat===null ? skills : skills.filter(s=>s.cat===activeCat);
+  document.getElementById('skill-list').innerHTML = filtered.map(s => {
+    const fillPct = (s.current/5)*100;
+    const targetPct = (s.target/5)*100;
+    return `
+      <div class="skill-row">
+        <div class="skill-name" title="${s.name}">${s.name}</div>
+        <div class="bar-wrap">
+          <div class="bar-fill" style="width:${fillPct}%;background:${LEVEL_COLORS[s.current]}"></div>
+          <div class="bar-target" style="left:${targetPct}%"></div>
+        </div>
+        <div class="level-txt">
+          <span style="color:var(--ink-muted);font-weight:600">${LEVELS[s.current]}</span>
+          <span style="color:var(--ink-muted)"> → ${LEVELS[s.target]}</span>
+        </div>
+        <span class="gap-badge gap-pending">Objetivo: ${s.target}</span>
+      </div>`;
+  }).join('') || '<div class="empty-state">Sin skills en esta categoría</div>';
 }
 
-selectPerson(0);
+function setCat(c){ currentCat = c; renderInventario(buildSkills(PEOPLE[currentPerson]), c); }
+
+function renderRadar(skills){
+  const cats = catsOf(skills);
+  const avgs = avgByCat(skills, cats);
+  const ctx = document.getElementById('radar-chart').getContext('2d');
+  if (radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, {
+    type:'radar',
+    data:{
+      labels: cats.map(c => c.length > 18 ? c.split(' ')[0] : c),
+      datasets:[
+        { label:'Nivel actual', data: avgs.map(a=>a.current), backgroundColor:'rgba(42,120,214,0.10)', borderColor:'#2a78d6', borderWidth:2, pointBackgroundColor:'#2a78d6', pointRadius:3 },
+        { label:'Objetivo del rol', data: avgs.map(a=>a.target), backgroundColor:'rgba(0,0,0,0)', borderColor:'#898781', borderWidth:1.5, borderDash:[4,4], pointBackgroundColor:'#898781', pointRadius:3 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{ r:{ min:0, max:5, ticks:{stepSize:1, font:{size:10,family:'Inter'}, color:'#898781', backdropColor:'transparent'}, grid:{color:'#e1e0d9'}, angleLines:{color:'#e1e0d9'}, pointLabels:{font:{size:10.5,family:'Inter',weight:'500'}, color:'#52514e'} } },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.r.toFixed(1)} / 5` }, bodyFont:{family:'Inter',size:12}, titleFont:{family:'Inter',size:11}, backgroundColor:'rgba(252,252,251,0.97)', titleColor:'#0b0b0b', bodyColor:'#52514e', borderColor:'#e1e0d9', borderWidth:1, padding:10 } }
+    }
+  });
+}
+
+function renderGaps(skills){
+  document.getElementById('gap-list').innerHTML = `
+    <div class="empty-state">
+      Todavía nadie completó su autoevaluación.<br>
+      Acá van a aparecer las <strong>brechas reales</strong> (nivel actual vs. objetivo) apenas se cargue el primer dato — no mostramos una lista fabricada mientras tanto.
+    </div>`;
+}
+
+function renderPlan(){
+  const cols = [{label:'70%',title:'Experiencial'},{label:'20%',title:'Social'},{label:'10%',title:'Formal'}];
+  document.getElementById('quest-cols').innerHTML = cols.map(c => `
+    <div class="quest-col">
+      <div class="quest-col-hdr"><div class="quest-pct">${c.label}</div><div class="quest-col-title">${c.title}</div></div>
+      <div class="quest-empty">Se define después de la primera validación del líder — no inventamos un plan de desarrollo sin datos reales.</div>
+    </div>`).join('');
+}
+
+function selectPerson(i){ currentPerson = i; currentCat = null; renderAll(); }
+
+function setView(v){
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const navMap = {dashboard:0,inventario:1,brechas:2,plan:3};
+  document.querySelectorAll('.sidebar-section .nav-item')[navMap[v]].classList.add('active');
+  document.getElementById('topbar-title').textContent = {
+    dashboard:'Dashboard · Skill Map', inventario:'Inventario de Skills', brechas:'Análisis de Brechas', plan:'Plan de Acción'
+  }[v];
+}
+
+renderAll();
 </script>
 </body>
 </html>
