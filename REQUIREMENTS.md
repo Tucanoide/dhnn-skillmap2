@@ -74,19 +74,19 @@ claro tipo dataviz, sidebar + topbar, tarjetas, gráfico radar con
 Chart.js) — es una herramienta interna distinta al onboarding, no
 necesita la identidad amarillo/negro de ese sitio.
 
-## 5.1 Actualización: co-liderazgo (cambia la sección 2)
+## 5.1 Aclaración: liderazgo de Design y PM
 
-Al levantar el roster real apareció un caso de **co-liderazgo**: los
-equipos de Design y PM tienen dos líderes directos en conjunto (Sabrina
-García Demestre y Lucas Davison), no uno solo. Esto contradice la
-decisión original de la sección 2 ("un único líder/manager").
+En un primer momento pareció haber co-liderazgo entre Sabrina García
+Demestre y Lucas Davison sobre Design y PM. Se confirmó que **no es
+así**: Lucas es el CEO (tope del organigrama), pero la líder directa de
+esos equipos es **Sabrina García Demestre**. Se mantiene el modelo
+original de la sección 2 (un único líder/manager por persona) — no hace
+falta rediseñar el esquema de permisos.
 
-**Impacto técnico:** el modelo de permisos (RLS) tiene que soportar
-"líder → múltiples personas" y también "persona → múltiples líderes",
-en vez de una relación 1 a 1. No es un cambio grande (una tabla de
-relación en vez de una columna `lider_id`), pero hay que decidirlo antes
-de diseñar el esquema. Pendiente de confirmación con Melisa antes de
-avanzar al esquema de base de datos.
+Los roles de Management/Chapter Lead (Diego Trefny, Juan Pablo Da Rocha,
+Rocío Doukler, María Julia Murua, Sabrina García Demestre, Pedro
+Astelarra, Melisa Fernández, Rocio Castillo) son las áreas de Shared
+Services/Dirección, y reportan directamente a **Lucas Davison (CEO)**.
 
 ## 6. Stack técnico
 
