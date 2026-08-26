@@ -1,19 +1,19 @@
 nombre,email,rol_puesto,area,banda,seniority,lider,notas
 Diego Trefny,,Director Comercial,Business & Marketing,Management,,,
 Patricio Euillades,,Responsable Admin,Finanzas & Administración,Staff,,,
-Luis Santiago Botto,,Product Designer Ssr.,Diseño de Producto,Diseñador,Ssr,,Posible "Santo Botto" del piloto de Estrategia de Pod
-Matías Jaubet,,Front End Dev Sr.,Desarrollo Frontend,Desarrollador,Sr,,Confirmado Frontend (no Fullstack) y seniority Senior
-Leandro Ferrara,,Tech Support,Desarrollo Backend & Tech,Staff,,,
-Agustín Zalazar,,Tech Lead,Desarrollo Backend & Tech,Lead,Líder,,
-Julio Lastra,,Project Manager SSr,Project Management & Operaciones,PM,Ssr,,
-Paula Quiroga,,Project Manager,Project Management & Operaciones,PM,,,
-Juan Pablo Da Rocha,,CTO,Liderazgo / Tech,Management,Líder,,Chapter Tech según organigrama de Estrategia de Pod
-Rocío Doukler,,Lead Product Design,Diseño de Producto,Lead,Líder,,Chapter Design según organigrama de Estrategia de Pod
-María Julia Murua,,CFO,Finanzas & Administración,Management,Líder,,Chapter Finanzas según organigrama de Estrategia de Pod
-Sabrina García Demestre,,Design Ops,Diseño de Producto,Management,,,Shared Services según organigrama
-Camila Perchik,,Designer,Diseño de Producto,Diseñador,,,Confirmada en deck Estrategia de Pod (equipo del piloto)
-Pedro Astelarra,,Director de Arte,Diseño Visual & Branding,Lead,Líder,,
-Melisa Fernández,,People Ops Lead,People & Culture,Lead,Líder,,Shared Services según organigrama
-Rocio Castillo,,Head of Business Development,Business & Marketing,Lead,Líder,,
-Emiliano Carbone,,Visual/Brand Designer Sr.,Diseño Visual & Branding,Diseñador,Sr,,
-Agustín Tello,,Animador,Diseño Visual & Branding,Diseñador,,,Corregí la grafía a "Tello" (con doble L)
+Luis Santiago Botto,,Product Designer Ssr.,Diseño de Producto,Diseñador,Ssr,Sabrina García Demestre / Lucas Davison,"Posible ""Santo Botto"" del piloto de Estrategia de Pod. Líder conjunto (ver nota general)"
+Matías Jaubet,,Front End Dev Sr.,Desarrollo Frontend,Desarrollador,Sr,Juan Pablo Da Rocha,Confirmado Frontend (no Fullstack) y seniority Senior
+Leandro Ferrara,,Tech Support,Desarrollo Backend & Tech,Staff,,Juan Pablo Da Rocha,
+Agustín Zalazar,,Tech Lead,Desarrollo Backend & Tech,Lead,Líder,Juan Pablo Da Rocha,
+Julio Lastra,,Project Manager SSr,Project Management & Operaciones,PM,Ssr,Sabrina García Demestre / Lucas Davison,Líder conjunto (ver nota general)
+Paula Quiroga,,Project Manager,Project Management & Operaciones,PM,,Sabrina García Demestre / Lucas Davison,Líder conjunto (ver nota general)
+Juan Pablo Da Rocha,,CTO,Liderazgo / Tech,Management,Líder,,Chapter Tech según organigrama de Estrategia de Pod. Es líder del equipo Tech - falta saber a quién reporta él
+Rocío Doukler,,Lead Product Design,Diseño de Producto,Lead,Líder,,"Chapter Design según organigrama de Estrategia de Pod. PENDIENTE: ¿reporta a Sabrina/Lucas o es un nivel propio?"
+María Julia Murua,,CFO,Finanzas & Administración,Management,Líder,,Chapter Finanzas según organigrama de Estrategia de Pod - falta saber a quién reporta ella
+Sabrina García Demestre,,Design Ops,Diseño de Producto,Management,,,"Líder directo (junto a Lucas Davison) de Design y PM. Falta saber a quién reporta ella"
+Camila Perchik,,Designer,Diseño de Producto,Diseñador,,Sabrina García Demestre / Lucas Davison,Confirmada en deck Estrategia de Pod (equipo del piloto). Líder conjunto (ver nota general)
+Pedro Astelarra,,Director de Arte,Diseño Visual & Branding,Lead,Líder,,"PENDIENTE: ¿reporta a Sabrina/Lucas o es un nivel propio, como Rocío Doukler?"
+Melisa Fernández,,People Ops Lead,People & Culture,Lead,Líder,,Shared Services según organigrama - falta saber a quién reporta ella
+Rocio Castillo,,Head of Business Development,Business & Marketing,Lead,Líder,,Falta saber a quién reporta ella
+Emiliano Carbone,,Visual/Brand Designer Sr.,Diseño Visual & Branding,Diseñador,Sr,Sabrina García Demestre / Lucas Davison,Líder conjunto (ver nota general)
+Agustín Tello,,Animador,Diseño Visual & Branding,Diseñador,,Sabrina García Demestre / Lucas Davison,"Corregí la grafía a ""Tello"" (con doble L). Líder conjunto (ver nota general)"

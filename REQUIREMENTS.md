@@ -74,6 +74,20 @@ claro tipo dataviz, sidebar + topbar, tarjetas, gráfico radar con
 Chart.js) — es una herramienta interna distinta al onboarding, no
 necesita la identidad amarillo/negro de ese sitio.
 
+## 5.1 Actualización: co-liderazgo (cambia la sección 2)
+
+Al levantar el roster real apareció un caso de **co-liderazgo**: los
+equipos de Design y PM tienen dos líderes directos en conjunto (Sabrina
+García Demestre y Lucas Davison), no uno solo. Esto contradice la
+decisión original de la sección 2 ("un único líder/manager").
+
+**Impacto técnico:** el modelo de permisos (RLS) tiene que soportar
+"líder → múltiples personas" y también "persona → múltiples líderes",
+en vez de una relación 1 a 1. No es un cambio grande (una tabla de
+relación en vez de una columna `lider_id`), pero hay que decidirlo antes
+de diseñar el esquema. Pendiente de confirmación con Melisa antes de
+avanzar al esquema de base de datos.
+
 ## 6. Stack técnico
 
 - **Frontend:** HTML/CSS/JS plano, sin build (mismo criterio que los
