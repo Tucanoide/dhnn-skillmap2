@@ -171,16 +171,37 @@ ambas secciones).
 - Fundamentos de blockchain / smart contracts
 - Casos de uso Web3 aplicados a negocio
 
+### 2.10 People & Culture (agregada — no estaba en el borrador original)
+*Necesaria para roles como People Ops Lead, que no encajaban en ninguna
+especialidad anterior.*
+- Reclutamiento y selección
+- Employer branding
+- Gestión de clima organizacional y cultura
+- Comunicación interna
+- Administración de beneficios
+- Legislación laboral básica por país
+
+### 2.11 IA & Automatización (categoría transversal — decisión validada)
+*Se mide en todas las áreas, no solo en una especialidad, porque ya es
+de uso diario en DHNN (Claude, Gemini).*
+- Prompting efectivo
+- Evaluación crítica del output de IA
+- Integración de IA al flujo de trabajo propio
+- Automatización de tareas repetitivas
+
 ---
 
-## 3. Qué necesito que valides
+## 3. Decisiones tomadas (con las opciones recomendadas, a falta de otra indicación)
 
-1. **La sección 2 completa es una propuesta mía** — confirmame si estas
-   son las especialidades reales que hay que cubrir, o si falta/sobra
-   alguna (¿Design Ops es su propia especialidad, o entra en Diseño de
-   Producto? ¿Separamos IA/Automatización como su propia categoría,
-   dado que ya la usan a diario?).
-2. **La curva de antigüedad propuesta para Tech/Business/Finance**
-   (sección 1.3) — decime si la aplicamos tal cual o la ajustamos.
-3. Una vez validado esto, lo convierto en la data inicial (seed) de
-   categorías y skills para cargar en Supabase.
+1. **Design Ops** queda dentro de Diseño de Producto (no es especialidad aparte).
+2. **IA & Automatización** es categoría propia y transversal (sección 2.11).
+3. **Curva de antigüedad** para Tech/Business/Finance: se aplica la
+   curva de PM (negociación/gestión desde año 1) a Business y
+   Liderazgo, y la curva de Diseño (más gradual) a roles técnicos y
+   de datos.
+4. Se agregó **People & Culture** (2.10) como especialidad — no estaba
+   en el borrador original, pero el rol de Melisa Fernández (People Ops
+   Lead) no encajaba en ninguna categoría existente.
+
+Si alguna de estas decisiones no es la que querés, decímelo y la ajusto
+antes de que se convierta en dato real dentro del sistema.
