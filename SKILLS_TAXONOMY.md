@@ -8,6 +8,14 @@ una compañía de diseño y producto.
 **Todo lo marcado como "propuesta" es mi borrador — falta tu validación
 antes de cargarlo al sistema.**
 
+**Actualización:** la sección 2 (hard skills) queda como el universo de
+referencia por área, pero **la asignación real a cada persona es por
+puesto específico, no por área genérica** — dos roles de la misma área
+(ej. Product Designer vs. Design Ops) no hacen lo mismo en el día a día,
+así que no comparten la misma lista. El detalle curado por cada uno de
+los 18 puestos reales vive en `preview.html` (constante `ROLE_SKILLS`),
+no repetido acá para no tener dos fuentes desactualizándose entre sí.
+
 ---
 
 ## 1. Habilidades blandas (transversales)
