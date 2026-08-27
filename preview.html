@@ -298,30 +298,143 @@ const SOFT_SKILLS_PM = ['Trabajo en equipo','Adaptabilidad','Relaciones interper
 const IA_SKILLS = ['Prompting efectivo','Evaluación crítica del output de IA','Integración de IA al flujo de trabajo','Automatización de tareas repetitivas'];
 const LIDERAZGO_SKILLS = ['Gestión y desarrollo de equipos','Definición de OKRs / objetivos','Reclutamiento y selección','Planificación estratégica','Gestión de P&L de área/pod','Mentoría y planes de carrera'];
 
-const AREA_SKILLS = {
-  'Diseño de Producto': ['Investigación de usuarios','Wireframing y prototipado','Arquitectura de información','Diseño de interacción','Tests de usabilidad','Diseño de sistemas','Accesibilidad (WCAG)','Figma avanzado'],
-  'Diseño Visual & Branding': ['Identidad visual / marca','Tipografía','Ilustración','Motion design','Diseño editorial','Dirección de arte'],
-  'Desarrollo Frontend': ['HTML / CSS avanzado','JavaScript / TypeScript','React','Consumo de APIs','Performance web','Testing','Control de versiones (Git)','Accesibilidad técnica'],
-  'Desarrollo Backend & Tech': ['Diseño de APIs','Bases de datos','Arquitectura de sistemas','Cloud','Seguridad de aplicaciones','CI/CD','Code review'],
-  'Project Management & Operaciones': ['Metodologías ágiles','Gestión de scope y presupuesto','Gestión de stakeholders','ClickUp / roadmapping','Gestión de riesgos','Reporting de proyecto'],
-  'Business & Marketing': ['Desarrollo de negocio','Pipeline comercial (HubSpot)','Propuestas comerciales','Análisis de mercado','Marketing digital / GA','Pricing'],
-  'Finanzas & Administración': ['Contabilidad general','Gestión presupuestaria','P&L / análisis financiero','Facturación y cobranzas','Cumplimiento normativo','Administración de RRHH'],
-  'People & Culture': ['Reclutamiento y selección','Employer branding','Clima organizacional','Comunicación interna','Administración de beneficios','Legislación laboral'],
-};
-
-/* Skills "core" por área: las más determinantes para ese rol, marcadas
-   con la etiqueta "Core" en el inventario. Es una propuesta editorial
-   mía (a partir del orden de la taxonomía) — ajustable por vos/People,
-   no un dato medido. */
-const CORE_SKILLS = {
-  'Diseño de Producto': ['Investigación de usuarios','Wireframing y prototipado','Diseño de sistemas'],
-  'Diseño Visual & Branding': ['Identidad visual / marca','Dirección de arte'],
-  'Desarrollo Frontend': ['JavaScript / TypeScript','React'],
-  'Desarrollo Backend & Tech': ['Arquitectura de sistemas','Diseño de APIs'],
-  'Project Management & Operaciones': ['Metodologías ágiles','Gestión de stakeholders'],
-  'Business & Marketing': ['Desarrollo de negocio','Pipeline comercial (HubSpot)'],
-  'Finanzas & Administración': ['P&L / análisis financiero','Gestión presupuestaria'],
-  'People & Culture': ['Reclutamiento y selección','Clima organizacional'],
+/* Skills duras específicas por PUESTO (no por área genérica). Cada
+   persona tiene su propia lista, tomada de una JD realista para ese
+   rol puntual — dos roles en la misma área (ej. Product Designer vs.
+   Design Ops) no comparten la misma lista, porque hacen cosas
+   distintas en el día a día. "core:true" marca las 2 más determinantes
+   para ese puesto (propuesta editorial mía, ajustable por People). */
+const ROLE_SKILLS = {
+  'Diego Trefny': [
+    {name:'Desarrollo de negocio', core:true},
+    {name:'Gestión de cuentas clave', core:true},
+    {name:'Negociación de contratos'},
+    {name:'Análisis de mercado y competencia'},
+    {name:'Pipeline comercial (HubSpot)'},
+    {name:'Propuestas comerciales'},
+  ],
+  'Patricio Euillades': [
+    {name:'Facturación y cobranzas', core:true},
+    {name:'Administración de RRHH (altas/bajas, liquidación)', core:true},
+    {name:'Cumplimiento normativo y fiscal'},
+    {name:'Gestión de proveedores'},
+    {name:'Contabilidad general'},
+  ],
+  'Luis Santiago Botto': [
+    {name:'Investigación de usuarios', core:true},
+    {name:'Wireframing y prototipado', core:true},
+    {name:'Diseño de interacción'},
+    {name:'Tests de usabilidad'},
+    {name:'Diseño de sistemas'},
+    {name:'Figma avanzado'},
+  ],
+  'Matías Jaubet': [
+    {name:'JavaScript / TypeScript', core:true},
+    {name:'React', core:true},
+    {name:'HTML / CSS avanzado'},
+    {name:'Performance web'},
+    {name:'Testing (unitario/e2e)'},
+    {name:'Control de versiones (Git)'},
+  ],
+  'Leandro Ferrara': [
+    {name:'Soporte técnico a usuarios', core:true},
+    {name:'Gestión de tickets / helpdesk', core:true},
+    {name:'Administración de accesos y cuentas'},
+    {name:'Mantenimiento de hardware y software'},
+    {name:'Redes básicas'},
+    {name:'Documentación de procesos IT'},
+  ],
+  'Agustín Zalazar': [
+    {name:'Arquitectura de sistemas', core:true},
+    {name:'Code review y buenas prácticas', core:true},
+    {name:'Diseño de APIs'},
+    {name:'Cloud'},
+    {name:'Mentoría técnica'},
+    {name:'Definición de stack tecnológico'},
+  ],
+  'Julio Lastra': [
+    {name:'Metodologías ágiles', core:true},
+    {name:'Gestión de stakeholders y clientes', core:true},
+    {name:'Gestión de scope y presupuesto'},
+    {name:'ClickUp / roadmapping'},
+    {name:'Gestión de riesgos'},
+  ],
+  'Paula Quiroga': [
+    {name:'Metodologías ágiles', core:true},
+    {name:'ClickUp / roadmapping', core:true},
+    {name:'Gestión de stakeholders y clientes'},
+    {name:'Reporting de proyecto'},
+    {name:'Gestión de scope y tiempos'},
+  ],
+  'Juan Pablo Da Rocha': [
+    {name:'Arquitectura de sistemas', core:true},
+    {name:'Definición de stack tecnológico', core:true},
+    {name:'Planificación estratégica de tecnología'},
+    {name:'Seguridad de la información'},
+    {name:'Cloud'},
+  ],
+  'Rocío Doukler': [
+    {name:'Diseño de sistemas (design systems)', core:true},
+    {name:'Definición de proceso de diseño', core:true},
+    {name:'Mentoría y desarrollo de diseñadores'},
+    {name:'Revisión y control de calidad de diseño'},
+    {name:'Investigación de usuarios'},
+  ],
+  'María Julia Murua': [
+    {name:'P&L / análisis financiero', core:true},
+    {name:'Gestión presupuestaria', core:true},
+    {name:'Planificación financiera estratégica'},
+    {name:'Cumplimiento normativo y fiscal'},
+    {name:'Reporting a dirección'},
+  ],
+  'Sabrina García Demestre': [
+    {name:'Gestión de herramientas de diseño (admin Figma)', core:true},
+    {name:'Definición y mantenimiento de procesos de diseño', core:true},
+    {name:'Onboarding de diseñadores'},
+    {name:'Métricas y reporting del equipo de diseño'},
+    {name:'Coordinación entre diseño y otras áreas'},
+  ],
+  'Camila Perchik': [
+    {name:'Wireframing y prototipado', core:true},
+    {name:'Investigación de usuarios', core:true},
+    {name:'Diseño de interacción'},
+    {name:'Figma avanzado'},
+    {name:'Tests de usabilidad'},
+  ],
+  'Pedro Astelarra': [
+    {name:'Dirección de arte', core:true},
+    {name:'Identidad visual / marca', core:true},
+    {name:'Revisión y control de calidad visual'},
+    {name:'Gestión de equipo creativo'},
+    {name:'Presentación de propuestas a clientes'},
+  ],
+  'Melisa Fernández': [
+    {name:'Reclutamiento y selección', core:true},
+    {name:'Clima organizacional y cultura', core:true},
+    {name:'Employer branding'},
+    {name:'Administración de beneficios'},
+    {name:'Legislación laboral'},
+  ],
+  'Rocio Castillo': [
+    {name:'Desarrollo de negocio / prospección', core:true},
+    {name:'Gestión y desarrollo de equipo comercial', core:true},
+    {name:'Pipeline comercial (HubSpot)'},
+    {name:'Propuestas comerciales'},
+    {name:'Análisis de mercado y competencia'},
+  ],
+  'Emiliano Carbone': [
+    {name:'Identidad visual / diseño de marca', core:true},
+    {name:'Tipografía', core:true},
+    {name:'Diseño editorial y de presentaciones'},
+    {name:'Ilustración'},
+  ],
+  'Agustín Tello': [
+    {name:'Motion design / microinteracciones', core:true},
+    {name:'Animación 2D/3D', core:true},
+    {name:'Storyboarding'},
+    {name:'Edición y composición de video'},
+    {name:'Timing y principios de animación'},
+  ],
 };
 
 /* ══════════════ ROSTER REAL (roster_DRAFT.csv) ══════════════ */
@@ -365,15 +478,15 @@ function initials(name){ return name.split(' ').filter(Boolean).slice(0,2).map(w
 
 function buildSkills(p) {
   const target = targetFor(p);
+  const roleItems = (ROLE_SKILLS[p.name] || []).map(s => ({name:s.name, core:!!s.core}));
   const cats = [];
-  cats.push({cat:p.area, items:(AREA_SKILLS[p.area]||[])});
-  cats.push({cat:'Habilidades Blandas', items:(PM_TRACK_BANDAS.includes(p.banda) ? SOFT_SKILLS_PM : SOFT_SKILLS_DESIGN)});
-  cats.push({cat:'IA & Automatización', items:IA_SKILLS});
-  if (LEADER_BANDAS.includes(p.banda)) cats.push({cat:'Liderazgo & Gestión de personas', items:LIDERAZGO_SKILLS});
+  cats.push({cat:p.area, items:roleItems});
+  cats.push({cat:'Habilidades Blandas', items:(PM_TRACK_BANDAS.includes(p.banda) ? SOFT_SKILLS_PM : SOFT_SKILLS_DESIGN).map(name=>({name,core:false}))});
+  cats.push({cat:'IA & Automatización', items:IA_SKILLS.map(name=>({name,core:false}))});
+  if (LEADER_BANDAS.includes(p.banda)) cats.push({cat:'Liderazgo & Gestión de personas', items:LIDERAZGO_SKILLS.map(name=>({name,core:false}))});
   const skills = [];
-  cats.forEach(c => c.items.forEach(name => {
-    const isCore = (CORE_SKILLS[c.cat] || []).includes(name);
-    skills.push({name, cat:c.cat, current:0, target, core:isCore});
+  cats.forEach(c => c.items.forEach(item => {
+    skills.push({name:item.name, cat:c.cat, current:0, target, core:item.core});
   }));
   return skills;
 }
