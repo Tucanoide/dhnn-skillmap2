@@ -26,6 +26,9 @@
   --warn:        #fab219;
   --crit:        #d03b3b;
   --yellow:      #ffe033;
+  --core:        #2a78d6;
+  --blandas:     #1baf7a;
+  --desarrollar: #eb9c00;
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -67,11 +70,11 @@ body{
 .p-name{font-size:12px;font-weight:600}
 .p-role{font-size:10px;color:var(--ink-muted)}
 .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--ink-muted)}
-.cat-sidebar-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:11.5px;color:var(--ink-2)}
-.cat-sidebar-item:hover{background:var(--surface2);color:var(--ink-1)}
-.cat-sidebar-item.active{background:var(--ink-1);color:#fff}
-.cat-sidebar-item.active .cat-count{color:#c7c6c1}
-.cat-sidebar-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bucket-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:11.5px;color:var(--ink-2)}
+.bucket-item:hover{background:var(--surface2);color:var(--ink-1)}
+.bucket-item.active{background:var(--ink-1);color:#fff}
+.bucket-item.active .cat-count{color:#c7c6c1}
+.bucket-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .cat-count{color:var(--ink-muted);font-weight:400;margin-left:auto}
 .core-badge{font-size:9px;font-weight:700;letter-spacing:.3px;color:#0d366b;background:#dce8fb;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;flex-shrink:0;white-space:nowrap}
 
@@ -98,8 +101,8 @@ body{
 .kpi-val{font-size:26px;font-weight:700;color:var(--ink-1);font-variant-numeric:tabular-nums;line-height:1.1}
 .kpi-lbl{font-size:10px;color:var(--ink-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
 
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-.stat-tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat-tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;border-top:3px solid var(--stat-color,var(--border))}
 .tile-val{font-size:24px;font-weight:700;color:var(--ink-1);font-variant-numeric:tabular-nums;line-height:1}
 .tile-lbl{font-size:10.5px;color:var(--ink-muted);margin-top:6px;text-transform:uppercase;letter-spacing:.4px}
 .tile-sub{font-size:11px;color:var(--ink-2);margin-top:3px}
@@ -118,8 +121,8 @@ body{
 .cat-tab.active{color:var(--ink-1);border-bottom-color:var(--ink-1);font-weight:600}
 .cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
-.skill-list{display:flex;flex-direction:column;overflow-y:auto;max-height:280px}
-.skill-row{display:grid;grid-template-columns:200px 1fr 130px 100px;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid var(--border)}
+.skill-list{display:flex;flex-direction:column;overflow-y:auto;max-height:320px}
+.skill-row{display:grid;grid-template-columns:230px 1fr 130px 100px;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid var(--border)}
 .skill-name-wrap{display:flex;align-items:center;gap:6px;min-width:0}
 .skill-row:last-child{border-bottom:none}
 .skill-row:hover{background:var(--surface2)}
@@ -143,24 +146,19 @@ body{
 .rl-dashed{border-top:2px dashed var(--ink-muted);width:20px}
 
 .gap-list{display:flex;flex-direction:column;overflow-y:auto;max-height:300px}
-.gap-item{display:grid;grid-template-columns:150px 1fr 32px 90px;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border)}
-.gap-item:last-child{border-bottom:none}
-.gap-item:hover{background:var(--surface2)}
-.gap-skill{font-size:12px;font-weight:500;color:var(--ink-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gap-bar-wrap{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
-.gap-bar-fill{height:100%;border-radius:3px;opacity:.75}
-.gap-n{font-size:12px;font-weight:700;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
-.gap-cat{font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;white-space:nowrap;text-align:center}
 
 .empty-state{padding:36px 24px;text-align:center;color:var(--ink-muted);font-size:12.5px;line-height:1.7}
 .empty-state strong{color:var(--ink-2)}
 
 .quest-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:var(--border);border-radius:0 0 10px 10px;overflow:hidden;flex:1}
-.quest-col{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.quest-col{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:340px}
 .quest-col-hdr{display:flex;align-items:baseline;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:2px;flex-shrink:0}
 .quest-pct{font-size:22px;font-weight:700;color:var(--ink-1)}
 .quest-col-title{font-size:11px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.5px}
 .quest-empty{font-size:11.5px;color:var(--ink-muted);padding:10px 0;line-height:1.6}
+.quest-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.quest-skill{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--desarrollar);margin-bottom:4px}
+.quest-action{font-size:11.5px;color:var(--ink-2);line-height:1.5}
 
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -198,8 +196,8 @@ body{
   </div>
 
   <div class="sidebar-section" style="margin-top:8px">
-    <div class="sidebar-sec-label">Categorías de esta persona</div>
-    <div id="cat-sidebar"></div>
+    <div class="sidebar-sec-label">Grupos de skills</div>
+    <div id="bucket-sidebar"></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:8px">
@@ -214,7 +212,7 @@ body{
   <header class="topbar">
     <div class="topbar-left">
       <div class="topbar-title" id="topbar-title">Dashboard · Skill Map</div>
-      <div class="topbar-subtitle">Roster y taxonomía reales · niveles pendientes de autoevaluación</div>
+      <div class="topbar-subtitle">Roster real · skills por puesto · niveles pendientes de autoevaluación</div>
     </div>
   </header>
 
@@ -244,7 +242,7 @@ body{
         </div>
 
         <div class="card">
-          <div class="card-header"><span class="card-title">Vista por categoría</span></div>
+          <div class="card-header"><span class="card-title">Vista por grupo</span></div>
           <div class="radar-wrap" style="height:300px"><canvas id="radar-chart"></canvas></div>
           <div class="radar-legend">
             <div class="rl-item"><div class="rl-line" style="background:#2a78d6;opacity:.7"></div><span>Nivel actual</span></div>
@@ -265,7 +263,7 @@ body{
         <div class="card">
           <div class="card-header">
             <span class="card-title">Plan de acción</span>
-            <span style="font-size:10px;color:var(--ink-muted)">Modelo 70 / 20 / 10</span>
+            <span style="font-size:10px;color:var(--ink-muted)">Modelo 70 / 20 / 10 · a partir de "a desarrollar"</span>
           </div>
           <div class="quest-cols" id="quest-cols"></div>
         </div>
@@ -279,161 +277,231 @@ body{
 <script>
 /* ══════════════ TAXONOMÍA REAL (SKILLS_TAXONOMY.md) ══════════════ */
 
-const CAT_META = {
-  'Diseño de Producto':                { color:'#2a78d6' },
-  'Diseño Visual & Branding':          { color:'#eb6834' },
-  'Desarrollo Frontend':               { color:'#00b8d9' },
-  'Desarrollo Backend & Tech':         { color:'#8a3ffc' },
-  'Project Management & Operaciones':  { color:'#6c5ce7' },
-  'Business & Marketing':              { color:'#e87ba4' },
-  'Finanzas & Administración':         { color:'#d63384' },
-  'People & Culture':                  { color:'#c2185b' },
-  'Habilidades Blandas':               { color:'#1baf7a' },
-  'IA & Automatización':               { color:'#eda100' },
-  'Liderazgo & Gestión de personas':   { color:'#b0790a' },
+const BUCKET_META = {
+  core:        { label:'Core',            color:'var(--core)' },
+  blandas:     { label:'Habilidades blandas', color:'var(--blandas)' },
+  desarrollar: { label:'A desarrollar',   color:'var(--desarrollar)' },
 };
 
-const SOFT_SKILLS_DESIGN = ['Trabajo en equipo','Adaptabilidad','Relaciones interpersonales','Comunicación asertiva','Gestión del tiempo','Orientación a resultados','Inteligencia emocional','Gestión','Negociación','Liderazgo','Pensamiento estratégico','Gestión de conflictos'];
-const SOFT_SKILLS_PM = ['Trabajo en equipo','Adaptabilidad','Relaciones interpersonales','Comunicación asertiva','Gestión del tiempo','Orientación a resultados','Inteligencia emocional','Negociación','Gestión','Pensamiento estratégico','Gestión de conflictos','Liderazgo'];
-const IA_SKILLS = ['Prompting efectivo','Evaluación crítica del output de IA','Integración de IA al flujo de trabajo','Automatización de tareas repetitivas'];
-const LIDERAZGO_SKILLS = ['Gestión y desarrollo de equipos','Definición de OKRs / objetivos','Reclutamiento y selección','Planificación estratégica','Gestión de P&L de área/pod','Mentoría y planes de carrera'];
+/* Curvas de habilidades blandas por antigüedad (Soft skills.xlsx),
+   comprimidas a 4 niveles: 1=Jr, 2=Ssr, 3=Sr, 4=Líder/Management.
+   Cada skill tiene el nivel en el que se vuelve exigible. */
+const CURVE_DESIGN = [
+  {name:'Trabajo en equipo', lvl:1},
+  {name:'Adaptabilidad', lvl:1},
+  {name:'Relaciones interpersonales', lvl:1},
+  {name:'Comunicación asertiva', lvl:1},
+  {name:'Gestión del tiempo', lvl:2},
+  {name:'Orientación a resultados', lvl:2},
+  {name:'Inteligencia emocional', lvl:2},
+  {name:'Gestión', lvl:3},
+  {name:'Negociación', lvl:3},
+  {name:'Liderazgo', lvl:3},
+  {name:'Pensamiento estratégico', lvl:4},
+  {name:'Gestión de conflictos', lvl:4},
+];
+const CURVE_PM = [
+  {name:'Trabajo en equipo', lvl:1},
+  {name:'Adaptabilidad', lvl:1},
+  {name:'Relaciones interpersonales', lvl:1},
+  {name:'Comunicación asertiva', lvl:1},
+  {name:'Gestión del tiempo', lvl:1},
+  {name:'Orientación a resultados', lvl:1},
+  {name:'Inteligencia emocional', lvl:1},
+  {name:'Negociación', lvl:1},
+  {name:'Gestión', lvl:1},
+  {name:'Pensamiento estratégico', lvl:2},
+  {name:'Gestión de conflictos', lvl:2},
+  {name:'Liderazgo', lvl:2},
+];
 
-/* Skills duras específicas por PUESTO (no por área genérica). Cada
-   persona tiene su propia lista, tomada de una JD realista para ese
-   rol puntual — dos roles en la misma área (ej. Product Designer vs.
-   Design Ops) no comparten la misma lista, porque hacen cosas
-   distintas en el día a día. "core:true" marca las 2 más determinantes
-   para ese puesto (propuesta editorial mía, ajustable por People). */
+const IA_SKILLS = ['Prompting efectivo','Evaluación crítica del output de IA','Integración de IA al flujo de trabajo','Automatización de tareas repetitivas'];
+
+/* Skills duras específicas por PUESTO real (no por área genérica).
+   6 "core" por persona — las más determinantes de su JD — y 2
+   secundarias que pasan al bucket "a desarrollar". Investigado a
+   partir de JDs de mercado para cada rol puntual, no copiado de una
+   lista de área compartida. Propuesta editorial mía, ajustable. */
 const ROLE_SKILLS = {
   'Diego Trefny': [
     {name:'Desarrollo de negocio', core:true},
     {name:'Gestión de cuentas clave', core:true},
-    {name:'Negociación de contratos'},
-    {name:'Análisis de mercado y competencia'},
-    {name:'Pipeline comercial (HubSpot)'},
+    {name:'Negociación de contratos', core:true},
+    {name:'Análisis de mercado y competencia', core:true},
+    {name:'Pipeline comercial (HubSpot)', core:true},
+    {name:'Forecasting y proyección de ventas', core:true},
     {name:'Propuestas comerciales'},
+    {name:'Marketing digital / GA'},
   ],
   'Patricio Euillades': [
     {name:'Facturación y cobranzas', core:true},
     {name:'Administración de RRHH (altas/bajas, liquidación)', core:true},
-    {name:'Cumplimiento normativo y fiscal'},
-    {name:'Gestión de proveedores'},
-    {name:'Contabilidad general'},
+    {name:'Cumplimiento normativo y fiscal', core:true},
+    {name:'Gestión de proveedores', core:true},
+    {name:'Contabilidad general', core:true},
+    {name:'Gestión documental y archivo', core:true},
+    {name:'Conciliación bancaria'},
+    {name:'Herramientas de gestión administrativa (ERP)'},
   ],
   'Luis Santiago Botto': [
     {name:'Investigación de usuarios', core:true},
     {name:'Wireframing y prototipado', core:true},
-    {name:'Diseño de interacción'},
-    {name:'Tests de usabilidad'},
-    {name:'Diseño de sistemas'},
-    {name:'Figma avanzado'},
+    {name:'Diseño de interacción', core:true},
+    {name:'Tests de usabilidad', core:true},
+    {name:'Figma avanzado', core:true},
+    {name:'Diseño de sistemas', core:true},
+    {name:'Accesibilidad (WCAG)'},
+    {name:'Data-informed design'},
   ],
   'Matías Jaubet': [
     {name:'JavaScript / TypeScript', core:true},
     {name:'React', core:true},
-    {name:'HTML / CSS avanzado'},
-    {name:'Performance web'},
-    {name:'Testing (unitario/e2e)'},
-    {name:'Control de versiones (Git)'},
+    {name:'HTML / CSS avanzado', core:true},
+    {name:'Performance web', core:true},
+    {name:'Testing (unitario/e2e)', core:true},
+    {name:'Control de versiones (Git)', core:true},
+    {name:'Accesibilidad técnica'},
+    {name:'Consumo de APIs'},
   ],
   'Leandro Ferrara': [
     {name:'Soporte técnico a usuarios', core:true},
     {name:'Gestión de tickets / helpdesk', core:true},
-    {name:'Administración de accesos y cuentas'},
-    {name:'Mantenimiento de hardware y software'},
-    {name:'Redes básicas'},
-    {name:'Documentación de procesos IT'},
+    {name:'Administración de accesos y cuentas', core:true},
+    {name:'Mantenimiento de hardware y software', core:true},
+    {name:'Redes básicas', core:true},
+    {name:'Documentación de procesos IT', core:true},
+    {name:'Seguridad básica de endpoints'},
+    {name:'Gestión de inventario de equipos'},
   ],
   'Agustín Zalazar': [
     {name:'Arquitectura de sistemas', core:true},
     {name:'Code review y buenas prácticas', core:true},
-    {name:'Diseño de APIs'},
-    {name:'Cloud'},
-    {name:'Mentoría técnica'},
-    {name:'Definición de stack tecnológico'},
+    {name:'Diseño de APIs', core:true},
+    {name:'Cloud', core:true},
+    {name:'Mentoría técnica', core:true},
+    {name:'Definición de stack tecnológico', core:true},
+    {name:'Seguridad de aplicaciones'},
+    {name:'CI/CD'},
   ],
   'Julio Lastra': [
     {name:'Metodologías ágiles', core:true},
     {name:'Gestión de stakeholders y clientes', core:true},
-    {name:'Gestión de scope y presupuesto'},
-    {name:'ClickUp / roadmapping'},
-    {name:'Gestión de riesgos'},
+    {name:'Gestión de scope y presupuesto', core:true},
+    {name:'ClickUp / roadmapping', core:true},
+    {name:'Gestión de riesgos', core:true},
+    {name:'Reporting de proyecto', core:true},
+    {name:'Facilitación de ceremonias ágiles'},
+    {name:'Estimación de proyectos'},
   ],
   'Paula Quiroga': [
     {name:'Metodologías ágiles', core:true},
     {name:'ClickUp / roadmapping', core:true},
-    {name:'Gestión de stakeholders y clientes'},
-    {name:'Reporting de proyecto'},
-    {name:'Gestión de scope y tiempos'},
+    {name:'Gestión de stakeholders y clientes', core:true},
+    {name:'Reporting de proyecto', core:true},
+    {name:'Gestión de scope y tiempos', core:true},
+    {name:'Gestión de riesgos', core:true},
+    {name:'Facilitación de ceremonias ágiles'},
+    {name:'Documentación de proyecto'},
   ],
   'Juan Pablo Da Rocha': [
     {name:'Arquitectura de sistemas', core:true},
     {name:'Definición de stack tecnológico', core:true},
-    {name:'Planificación estratégica de tecnología'},
-    {name:'Seguridad de la información'},
-    {name:'Cloud'},
+    {name:'Planificación estratégica de tecnología', core:true},
+    {name:'Seguridad de la información', core:true},
+    {name:'Cloud', core:true},
+    {name:'Gestión y desarrollo de equipos técnicos', core:true},
+    {name:'Presupuesto de tecnología'},
+    {name:'Evaluación de proveedores tech'},
   ],
   'Rocío Doukler': [
     {name:'Diseño de sistemas (design systems)', core:true},
     {name:'Definición de proceso de diseño', core:true},
-    {name:'Mentoría y desarrollo de diseñadores'},
-    {name:'Revisión y control de calidad de diseño'},
-    {name:'Investigación de usuarios'},
+    {name:'Mentoría y desarrollo de diseñadores', core:true},
+    {name:'Revisión y control de calidad de diseño', core:true},
+    {name:'Investigación de usuarios', core:true},
+    {name:'Planificación estratégica de producto', core:true},
+    {name:'Presentación a clientes'},
+    {name:'Data-informed design'},
   ],
   'María Julia Murua': [
     {name:'P&L / análisis financiero', core:true},
     {name:'Gestión presupuestaria', core:true},
-    {name:'Planificación financiera estratégica'},
-    {name:'Cumplimiento normativo y fiscal'},
-    {name:'Reporting a dirección'},
+    {name:'Planificación financiera estratégica', core:true},
+    {name:'Cumplimiento normativo y fiscal', core:true},
+    {name:'Reporting a dirección', core:true},
+    {name:'Gestión de tesorería', core:true},
+    {name:'Relación con inversores / bancos'},
+    {name:'Auditoría financiera'},
   ],
   'Sabrina García Demestre': [
     {name:'Gestión de herramientas de diseño (admin Figma)', core:true},
     {name:'Definición y mantenimiento de procesos de diseño', core:true},
-    {name:'Onboarding de diseñadores'},
-    {name:'Métricas y reporting del equipo de diseño'},
-    {name:'Coordinación entre diseño y otras áreas'},
+    {name:'Onboarding de diseñadores', core:true},
+    {name:'Métricas y reporting del equipo de diseño', core:true},
+    {name:'Coordinación entre diseño y otras áreas', core:true},
+    {name:'Gestión de design systems (a nivel operativo)', core:true},
+    {name:'Gestión de licencias y presupuesto de herramientas'},
+    {name:'Documentación de procesos'},
   ],
   'Camila Perchik': [
     {name:'Wireframing y prototipado', core:true},
     {name:'Investigación de usuarios', core:true},
-    {name:'Diseño de interacción'},
-    {name:'Figma avanzado'},
-    {name:'Tests de usabilidad'},
+    {name:'Diseño de interacción', core:true},
+    {name:'Figma avanzado', core:true},
+    {name:'Tests de usabilidad', core:true},
+    {name:'Arquitectura de información', core:true},
+    {name:'Diseño de sistemas'},
+    {name:'Accesibilidad (WCAG)'},
   ],
   'Pedro Astelarra': [
     {name:'Dirección de arte', core:true},
     {name:'Identidad visual / marca', core:true},
-    {name:'Revisión y control de calidad visual'},
-    {name:'Gestión de equipo creativo'},
-    {name:'Presentación de propuestas a clientes'},
+    {name:'Revisión y control de calidad visual', core:true},
+    {name:'Gestión de equipo creativo', core:true},
+    {name:'Presentación de propuestas a clientes', core:true},
+    {name:'Diseño editorial y de presentaciones', core:true},
+    {name:'Motion design'},
+    {name:'Tipografía'},
   ],
   'Melisa Fernández': [
     {name:'Reclutamiento y selección', core:true},
     {name:'Clima organizacional y cultura', core:true},
-    {name:'Employer branding'},
-    {name:'Administración de beneficios'},
-    {name:'Legislación laboral'},
+    {name:'Employer branding', core:true},
+    {name:'Administración de beneficios', core:true},
+    {name:'Legislación laboral', core:true},
+    {name:'Comunicación interna', core:true},
+    {name:'Diseño de programas de onboarding'},
+    {name:'People analytics'},
   ],
   'Rocio Castillo': [
     {name:'Desarrollo de negocio / prospección', core:true},
     {name:'Gestión y desarrollo de equipo comercial', core:true},
-    {name:'Pipeline comercial (HubSpot)'},
-    {name:'Propuestas comerciales'},
-    {name:'Análisis de mercado y competencia'},
+    {name:'Pipeline comercial (HubSpot)', core:true},
+    {name:'Propuestas comerciales', core:true},
+    {name:'Análisis de mercado y competencia', core:true},
+    {name:'Negociación de contratos grandes', core:true},
+    {name:'Marketing digital / GA'},
+    {name:'Pricing'},
   ],
   'Emiliano Carbone': [
     {name:'Identidad visual / diseño de marca', core:true},
     {name:'Tipografía', core:true},
-    {name:'Diseño editorial y de presentaciones'},
-    {name:'Ilustración'},
+    {name:'Diseño editorial y de presentaciones', core:true},
+    {name:'Ilustración', core:true},
+    {name:'Dirección de arte (colaborativa)', core:true},
+    {name:'Sistemas de marca (brand guidelines)', core:true},
+    {name:'Motion design'},
+    {name:'Diseño digital / web'},
   ],
   'Agustín Tello': [
     {name:'Motion design / microinteracciones', core:true},
     {name:'Animación 2D/3D', core:true},
-    {name:'Storyboarding'},
-    {name:'Edición y composición de video'},
-    {name:'Timing y principios de animación'},
+    {name:'Storyboarding', core:true},
+    {name:'Edición y composición de video', core:true},
+    {name:'Timing y principios de animación', core:true},
+    {name:'Sound design básico / sincronización', core:true},
+    {name:'Ilustración'},
+    {name:'Diseño de personajes'},
   ],
 };
 
@@ -465,48 +533,55 @@ const PM_TRACK_BANDAS = ['PM','Management','Lead'];
 const LEVELS = ['Sin autoevaluar','Aprendiz','Iniciado','Competente','Avanzado','Maestro'];
 const LEVEL_COLORS = ['#e1e0d9','#cde2fb','#86b6ef','#3987e5','#256abf','#0d366b'];
 
-/* Nivel objetivo por banda/seniority — decisión de diseño de rol, no un
-   dato personal. Ver SKILLS_TAXONOMY.md sección 1 para la lógica de
-   progresión por antigüedad. */
 function targetFor(p) {
   if (p.seniority === 'Sr' || p.seniority === 'Líder' || LEADER_BANDAS.includes(p.banda)) return 5;
   if (p.seniority === 'Ssr') return 4;
   return 3;
 }
 
+/* Nivel 1(Jr)–4(Líder) para saber qué tramo de la curva de blandas
+   le corresponde a cada persona hoy. */
+function personLevel(p) {
+  if (p.seniority === 'Líder' || LEADER_BANDAS.includes(p.banda)) return 4;
+  if (p.seniority === 'Sr') return 3;
+  if (p.seniority === 'Ssr') return 2;
+  return 1;
+}
+
 function initials(name){ return name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
 
 function buildSkills(p) {
   const target = targetFor(p);
-  const roleItems = (ROLE_SKILLS[p.name] || []).map(s => ({name:s.name, core:!!s.core}));
-  const cats = [];
-  cats.push({cat:p.area, items:roleItems});
-  cats.push({cat:'Habilidades Blandas', items:(PM_TRACK_BANDAS.includes(p.banda) ? SOFT_SKILLS_PM : SOFT_SKILLS_DESIGN).map(name=>({name,core:false}))});
-  cats.push({cat:'IA & Automatización', items:IA_SKILLS.map(name=>({name,core:false}))});
-  if (LEADER_BANDAS.includes(p.banda)) cats.push({cat:'Liderazgo & Gestión de personas', items:LIDERAZGO_SKILLS.map(name=>({name,core:false}))});
+  const lvl = personLevel(p);
+  const curve = PM_TRACK_BANDAS.includes(p.banda) ? CURVE_PM : CURVE_DESIGN;
+  const roleItems = ROLE_SKILLS[p.name] || [];
   const skills = [];
-  cats.forEach(c => c.items.forEach(item => {
-    skills.push({name:item.name, cat:c.cat, current:0, target, core:item.core});
+
+  roleItems.forEach(s => skills.push({
+    name:s.name, cat:p.area, current:0, target,
+    bucket: s.core ? 'core' : 'desarrollar',
   }));
+
+  curve.forEach(s => {
+    if (s.lvl <= lvl) skills.push({name:s.name, cat:'Habilidades blandas', current:0, target, bucket:'blandas'});
+    else if (s.lvl === lvl + 1) skills.push({name:s.name, cat:'Habilidades blandas', current:0, target, bucket:'desarrollar'});
+  });
+
+  IA_SKILLS.forEach(name => skills.push({name, cat:'IA & Automatización', current:0, target, bucket:'desarrollar'}));
+
   return skills;
 }
 
 /* ══════════════ STATE ══════════════ */
 let currentPerson = 0;
-let currentCat = null;
+let currentBucket = null;
 let radarChart = null;
 
 function gap(s){ return Math.max(0, s.target - s.current); }
 
-function catsOf(skills){
-  const seen = [];
-  skills.forEach(s => { if (!seen.includes(s.cat)) seen.push(s.cat); });
-  return seen;
-}
-
-function avgByCat(skills, cats){
-  return cats.map(c => {
-    const items = skills.filter(s => s.cat === c);
+function avgByBucket(skills){
+  return ['core','blandas','desarrollar'].map(b => {
+    const items = skills.filter(s => s.bucket === b);
     if (!items.length) return {current:0, target:0};
     return {
       current: items.reduce((a,s)=>a+s.current,0)/items.length,
@@ -519,15 +594,15 @@ function avgByCat(skills, cats){
 function renderAll(){
   const p = PEOPLE[currentPerson];
   const skills = buildSkills(p);
-  document.getElementById('note-banner').innerHTML = `Esta es una <strong>preview de estructura</strong> con el roster real de DHNN. Los niveles <strong>objetivo</strong> reflejan lo esperado para el rol/seniority (definición de puesto, no un dato personal). Los niveles <strong>actuales</strong> están en 0 porque todavía nadie completó su autoevaluación — no inventamos desempeño de personas reales.`;
+  document.getElementById('note-banner').innerHTML = `Esta es una <strong>preview de estructura</strong> con el roster real de DHNN. Cada persona tiene <strong>6 skills "core"</strong> específicas de su puesto (no genéricas del área), <strong>habilidades blandas</strong> filtradas por su seniority real (no todas a todos), y un bucket de <strong>"a desarrollar"</strong> que alimenta el Plan de acción. Los niveles <strong>actuales</strong> siguen en 0: nadie se autoevaluó todavía, no inventamos desempeño de personas reales.`;
   renderPersonList();
-  renderCatSidebar(skills);
+  renderBucketSidebar(skills);
   renderHero(p, skills);
-  renderStats(p, skills);
+  renderStats(skills);
   renderInventario(skills, null);
   renderRadar(skills);
   renderGaps(skills);
-  renderPlan();
+  renderPlan(skills);
 }
 
 function renderPersonList(){
@@ -539,6 +614,9 @@ function renderPersonList(){
 }
 
 function renderHero(p, skills){
+  const core = skills.filter(s=>s.bucket==='core').length;
+  const blandas = skills.filter(s=>s.bucket==='blandas').length;
+  const desarrollar = skills.filter(s=>s.bucket==='desarrollar').length;
   document.getElementById('hero-card').innerHTML = `
     <div class="avatar">${initials(p.name)}</div>
     <div class="hero-info">
@@ -551,57 +629,51 @@ function renderHero(p, skills){
       </div>
     </div>
     <div class="hero-kpis">
-      <div class="kpi"><div class="kpi-val">${skills.length}</div><div class="kpi-lbl">Skills mapeados</div></div>
-      <div class="kpi"><div class="kpi-val" style="color:var(--ink-muted)">0</div><div class="kpi-lbl">Autoevaluados</div></div>
-      <div class="kpi"><div class="kpi-val" style="color:var(--ink-muted)">—</div><div class="kpi-lbl">Gap total</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--core)">${core}</div><div class="kpi-lbl">Core</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--blandas)">${blandas}</div><div class="kpi-lbl">Blandas</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--desarrollar)">${desarrollar}</div><div class="kpi-lbl">A desarrollar</div></div>
     </div>`;
 }
 
-function renderStats(p, skills){
-  const cats = catsOf(skills);
-  const avgs = avgByCat(skills, cats);
-  document.getElementById('stat-row').innerHTML = cats.map((c,i) => `
-    <div class="stat-tile">
+function renderStats(skills){
+  const avgs = avgByBucket(skills);
+  const buckets = ['core','blandas','desarrollar'];
+  document.getElementById('stat-row').innerHTML = buckets.map((b,i) => `
+    <div class="stat-tile" style="--stat-color:${BUCKET_META[b].color}">
       <div class="tile-val" style="color:var(--ink-muted)">0<span style="font-size:14px;font-weight:400"> / ${avgs[i].target.toFixed(1)}</span></div>
-      <div class="tile-lbl">${c}</div>
+      <div class="tile-lbl">${BUCKET_META[b].label} (${skills.filter(s=>s.bucket===b).length})</div>
       <div style="margin-top:8px;height:3px;background:var(--surface2);border-radius:2px"></div>
       <div class="tile-sub" style="margin-top:4px;color:var(--ink-muted)">Sin autoevaluar</div>
     </div>`).join('');
 }
 
-function renderCatSidebar(skills){
-  const cats = catsOf(skills);
-  document.getElementById('cat-sidebar').innerHTML = `
-    <div class="cat-sidebar-item${currentCat===null?' active':''}" onclick="setCat(null)">
-      <span class="cat-sidebar-dot" style="background:var(--ink-muted)"></span>Todas
+function renderBucketSidebar(skills){
+  document.getElementById('bucket-sidebar').innerHTML = `
+    <div class="bucket-item${currentBucket===null?' active':''}" onclick="setBucket(null)">
+      <span class="bucket-dot" style="background:var(--ink-muted)"></span>Todas
       <span class="cat-count">${skills.length}</span>
     </div>` +
-    cats.map(c => {
-      const count = skills.filter(s=>s.cat===c).length;
-      const coreCount = skills.filter(s=>s.cat===c && s.core).length;
-      const meta = CAT_META[c] || {color:'#999'};
-      return `<div class="cat-sidebar-item${currentCat===c?' active':''}" onclick="setCat('${c.replace(/'/g,"\\'")}')">
-        <span class="cat-sidebar-dot" style="background:${meta.color}"></span>${c}${coreCount ? ` <span class="core-badge" style="margin-left:4px">${coreCount} core</span>` : ''}
+    ['core','blandas','desarrollar'].map(b => {
+      const count = skills.filter(s=>s.bucket===b).length;
+      return `<div class="bucket-item${currentBucket===b?' active':''}" onclick="setBucket('${b}')">
+        <span class="bucket-dot" style="background:${BUCKET_META[b].color}"></span>${BUCKET_META[b].label}
         <span class="cat-count">${count}</span>
       </div>`;
     }).join('');
 }
 
-function renderInventario(skills, activeCat){
-  const cats = catsOf(skills);
+function renderInventario(skills, activeBucket){
   document.getElementById('cat-tabs').innerHTML = `
-    <div class="cat-tab${activeCat===null?' active':''}" onclick="setCat(null)">Todas <span style="color:var(--ink-muted);font-weight:400">(${skills.length})</span></div>` +
-    cats.map(c => {
-      const count = skills.filter(s=>s.cat===c).length;
-      const meta = CAT_META[c] || {color:'#999'};
-      return `<div class="cat-tab${activeCat===c?' active':''}" onclick="setCat('${c.replace(/'/g,"\\'")}')">
-        <span class="cat-dot" style="background:${meta.color}"></span>${c}
+    <div class="cat-tab${activeBucket===null?' active':''}" onclick="setBucket(null)">Todas <span style="color:var(--ink-muted);font-weight:400">(${skills.length})</span></div>` +
+    ['core','blandas','desarrollar'].map(b => {
+      const count = skills.filter(s=>s.bucket===b).length;
+      return `<div class="cat-tab${activeBucket===b?' active':''}" onclick="setBucket('${b}')">
+        <span class="cat-dot" style="background:${BUCKET_META[b].color}"></span>${BUCKET_META[b].label}
         <span style="color:var(--ink-muted);font-weight:400">(${count})</span>
       </div>`;
     }).join('');
 
-  const filtered = (activeCat===null ? skills : skills.filter(s=>s.cat===activeCat))
-    .slice().sort((a,b) => (b.core?1:0) - (a.core?1:0));
+  const filtered = activeBucket===null ? skills : skills.filter(s=>s.bucket===activeBucket);
   document.getElementById('skill-list').innerHTML = filtered.map(s => {
     const fillPct = (s.current/5)*100;
     const targetPct = (s.target/5)*100;
@@ -609,7 +681,7 @@ function renderInventario(skills, activeCat){
       <div class="skill-row">
         <div class="skill-name-wrap">
           <span class="skill-name" title="${s.name}">${s.name}</span>
-          ${s.core ? '<span class="core-badge">Core</span>' : ''}
+          ${s.bucket==='core' ? '<span class="core-badge">Core</span>' : ''}
         </div>
         <div class="bar-wrap">
           <div class="bar-fill" style="width:${fillPct}%;background:${LEVEL_COLORS[s.current]}"></div>
@@ -621,25 +693,25 @@ function renderInventario(skills, activeCat){
         </div>
         <span class="gap-badge gap-pending">Objetivo: ${s.target}</span>
       </div>`;
-  }).join('') || '<div class="empty-state">Sin skills en esta categoría</div>';
+  }).join('') || '<div class="empty-state">Sin skills en este grupo</div>';
 }
 
-function setCat(c){
-  currentCat = c;
+function setBucket(b){
+  currentBucket = b;
   const skills = buildSkills(PEOPLE[currentPerson]);
-  renderInventario(skills, c);
-  renderCatSidebar(skills);
+  renderInventario(skills, b);
+  renderBucketSidebar(skills);
 }
 
 function renderRadar(skills){
-  const cats = catsOf(skills);
-  const avgs = avgByCat(skills, cats);
+  const avgs = avgByBucket(skills);
+  const labels = ['core','blandas','desarrollar'].map(b => BUCKET_META[b].label);
   const ctx = document.getElementById('radar-chart').getContext('2d');
   if (radarChart) radarChart.destroy();
   radarChart = new Chart(ctx, {
     type:'radar',
     data:{
-      labels: cats.map(c => c.length > 18 ? c.split(' ')[0] : c),
+      labels,
       datasets:[
         { label:'Nivel actual', data: avgs.map(a=>a.current), backgroundColor:'rgba(42,120,214,0.10)', borderColor:'#2a78d6', borderWidth:2, pointBackgroundColor:'#2a78d6', pointRadius:3 },
         { label:'Objetivo del rol', data: avgs.map(a=>a.target), backgroundColor:'rgba(0,0,0,0)', borderColor:'#898781', borderWidth:1.5, borderDash:[4,4], pointBackgroundColor:'#898781', pointRadius:3 }
@@ -647,7 +719,7 @@ function renderRadar(skills){
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      scales:{ r:{ min:0, max:5, ticks:{stepSize:1, font:{size:10,family:'Inter'}, color:'#898781', backdropColor:'transparent'}, grid:{color:'#e1e0d9'}, angleLines:{color:'#e1e0d9'}, pointLabels:{font:{size:10.5,family:'Inter',weight:'500'}, color:'#52514e'} } },
+      scales:{ r:{ min:0, max:5, ticks:{stepSize:1, font:{size:10,family:'Inter'}, color:'#898781', backdropColor:'transparent'}, grid:{color:'#e1e0d9'}, angleLines:{color:'#e1e0d9'}, pointLabels:{font:{size:11,family:'Inter',weight:'500'}, color:'#52514e'} } },
       plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => ` ${c.dataset.label}: ${c.parsed.r.toFixed(1)} / 5` }, bodyFont:{family:'Inter',size:12}, titleFont:{family:'Inter',size:11}, backgroundColor:'rgba(252,252,251,0.97)', titleColor:'#0b0b0b', bodyColor:'#52514e', borderColor:'#e1e0d9', borderWidth:1, padding:10 } }
     }
   });
@@ -661,16 +733,35 @@ function renderGaps(skills){
     </div>`;
 }
 
-function renderPlan(){
-  const cols = [{label:'70%',title:'Experiencial'},{label:'20%',title:'Social'},{label:'10%',title:'Formal'}];
-  document.getElementById('quest-cols').innerHTML = cols.map(c => `
-    <div class="quest-col">
-      <div class="quest-col-hdr"><div class="quest-pct">${c.label}</div><div class="quest-col-title">${c.title}</div></div>
-      <div class="quest-empty">Se define después de la primera validación del líder — no inventamos un plan de desarrollo sin datos reales.</div>
-    </div>`).join('');
+/* Plan de acción: se arma con el bucket "a desarrollar" de cada
+   persona. La sugerencia de cómo trabajar cada skill es genérica por
+   tipo (no es un plan personal inventado), y se reparte entre
+   Experiencial / Social / Formal según el modelo 70/20/10. */
+function renderPlan(skills){
+  const toDev = skills.filter(s => s.bucket === 'desarrollar');
+  const cols = [
+    {key:'exp', label:'70%', title:'Experiencial', filter: s => s.cat !== 'Habilidades blandas' && s.cat !== 'IA & Automatización', suggestion: s => `Practicá "${s.name}" en un proyecto real, con acompañamiento de tu líder.`},
+    {key:'soc', label:'20%', title:'Social', filter: s => s.cat === 'Habilidades blandas', suggestion: s => `Pedí feedback o mentoría puntual en "${s.name}" a tu líder o a alguien senior del equipo.`},
+    {key:'for', label:'10%', title:'Formal', filter: s => s.cat === 'IA & Automatización', suggestion: s => `Buscá un curso, recurso o sesión de entrenamiento en "${s.name}".`},
+  ];
+  document.getElementById('quest-cols').innerHTML = cols.map(c => {
+    const items = toDev.filter(c.filter);
+    const body = items.length
+      ? items.map(s => `
+          <div class="quest-card">
+            <div class="quest-skill">${s.name}</div>
+            <div class="quest-action">${c.suggestion(s)}</div>
+          </div>`).join('')
+      : `<div class="quest-empty">Sin skills de este tipo en "a desarrollar" para esta persona.</div>`;
+    return `
+      <div class="quest-col">
+        <div class="quest-col-hdr"><div class="quest-pct">${c.label}</div><div class="quest-col-title">${c.title}</div></div>
+        ${body}
+      </div>`;
+  }).join('');
 }
 
-function selectPerson(i){ currentPerson = i; currentCat = null; renderAll(); }
+function selectPerson(i){ currentPerson = i; currentBucket = null; renderAll(); }
 
 function setView(v){
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
