@@ -67,6 +67,13 @@ body{
 .p-name{font-size:12px;font-weight:600}
 .p-role{font-size:10px;color:var(--ink-muted)}
 .sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--ink-muted)}
+.cat-sidebar-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:11.5px;color:var(--ink-2)}
+.cat-sidebar-item:hover{background:var(--surface2);color:var(--ink-1)}
+.cat-sidebar-item.active{background:var(--ink-1);color:#fff}
+.cat-sidebar-item.active .cat-count{color:#c7c6c1}
+.cat-sidebar-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cat-count{color:var(--ink-muted);font-weight:400;margin-left:auto}
+.core-badge{font-size:9px;font-weight:700;letter-spacing:.3px;color:#0d366b;background:#dce8fb;padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;flex-shrink:0;white-space:nowrap}
 
 .main{margin-left:220px;flex:1;display:flex;flex-direction:column}
 
@@ -112,10 +119,11 @@ body{
 .cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
 .skill-list{display:flex;flex-direction:column;overflow-y:auto;max-height:280px}
-.skill-row{display:grid;grid-template-columns:168px 1fr 130px 100px;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid var(--border)}
+.skill-row{display:grid;grid-template-columns:200px 1fr 130px 100px;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid var(--border)}
+.skill-name-wrap{display:flex;align-items:center;gap:6px;min-width:0}
 .skill-row:last-child{border-bottom:none}
 .skill-row:hover{background:var(--surface2)}
-.skill-name{font-size:12.5px;color:var(--ink-1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.skill-name{font-size:12.5px;color:var(--ink-1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .bar-wrap{position:relative;height:5px;background:var(--surface2);border-radius:3px;overflow:visible}
 .bar-fill{height:100%;border-radius:3px;transition:width .35s ease}
 .bar-target{position:absolute;top:-5px;width:2px;height:15px;background:var(--ink-muted);border-radius:1px}
@@ -187,6 +195,11 @@ body{
       <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
       Plan de acción
     </div>
+  </div>
+
+  <div class="sidebar-section" style="margin-top:8px">
+    <div class="sidebar-sec-label">Categorías de esta persona</div>
+    <div id="cat-sidebar"></div>
   </div>
 
   <div class="sidebar-section" style="margin-top:8px">
@@ -296,6 +309,21 @@ const AREA_SKILLS = {
   'People & Culture': ['Reclutamiento y selección','Employer branding','Clima organizacional','Comunicación interna','Administración de beneficios','Legislación laboral'],
 };
 
+/* Skills "core" por área: las más determinantes para ese rol, marcadas
+   con la etiqueta "Core" en el inventario. Es una propuesta editorial
+   mía (a partir del orden de la taxonomía) — ajustable por vos/People,
+   no un dato medido. */
+const CORE_SKILLS = {
+  'Diseño de Producto': ['Investigación de usuarios','Wireframing y prototipado','Diseño de sistemas'],
+  'Diseño Visual & Branding': ['Identidad visual / marca','Dirección de arte'],
+  'Desarrollo Frontend': ['JavaScript / TypeScript','React'],
+  'Desarrollo Backend & Tech': ['Arquitectura de sistemas','Diseño de APIs'],
+  'Project Management & Operaciones': ['Metodologías ágiles','Gestión de stakeholders'],
+  'Business & Marketing': ['Desarrollo de negocio','Pipeline comercial (HubSpot)'],
+  'Finanzas & Administración': ['P&L / análisis financiero','Gestión presupuestaria'],
+  'People & Culture': ['Reclutamiento y selección','Clima organizacional'],
+};
+
 /* ══════════════ ROSTER REAL (roster_DRAFT.csv) ══════════════ */
 
 const PEOPLE = [
@@ -343,7 +371,10 @@ function buildSkills(p) {
   cats.push({cat:'IA & Automatización', items:IA_SKILLS});
   if (LEADER_BANDAS.includes(p.banda)) cats.push({cat:'Liderazgo & Gestión de personas', items:LIDERAZGO_SKILLS});
   const skills = [];
-  cats.forEach(c => c.items.forEach(name => skills.push({name, cat:c.cat, current:0, target})));
+  cats.forEach(c => c.items.forEach(name => {
+    const isCore = (CORE_SKILLS[c.cat] || []).includes(name);
+    skills.push({name, cat:c.cat, current:0, target, core:isCore});
+  }));
   return skills;
 }
 
@@ -377,6 +408,7 @@ function renderAll(){
   const skills = buildSkills(p);
   document.getElementById('note-banner').innerHTML = `Esta es una <strong>preview de estructura</strong> con el roster real de DHNN. Los niveles <strong>objetivo</strong> reflejan lo esperado para el rol/seniority (definición de puesto, no un dato personal). Los niveles <strong>actuales</strong> están en 0 porque todavía nadie completó su autoevaluación — no inventamos desempeño de personas reales.`;
   renderPersonList();
+  renderCatSidebar(skills);
   renderHero(p, skills);
   renderStats(p, skills);
   renderInventario(skills, null);
@@ -424,6 +456,24 @@ function renderStats(p, skills){
     </div>`).join('');
 }
 
+function renderCatSidebar(skills){
+  const cats = catsOf(skills);
+  document.getElementById('cat-sidebar').innerHTML = `
+    <div class="cat-sidebar-item${currentCat===null?' active':''}" onclick="setCat(null)">
+      <span class="cat-sidebar-dot" style="background:var(--ink-muted)"></span>Todas
+      <span class="cat-count">${skills.length}</span>
+    </div>` +
+    cats.map(c => {
+      const count = skills.filter(s=>s.cat===c).length;
+      const coreCount = skills.filter(s=>s.cat===c && s.core).length;
+      const meta = CAT_META[c] || {color:'#999'};
+      return `<div class="cat-sidebar-item${currentCat===c?' active':''}" onclick="setCat('${c.replace(/'/g,"\\'")}')">
+        <span class="cat-sidebar-dot" style="background:${meta.color}"></span>${c}${coreCount ? ` <span class="core-badge" style="margin-left:4px">${coreCount} core</span>` : ''}
+        <span class="cat-count">${count}</span>
+      </div>`;
+    }).join('');
+}
+
 function renderInventario(skills, activeCat){
   const cats = catsOf(skills);
   document.getElementById('cat-tabs').innerHTML = `
@@ -437,13 +487,17 @@ function renderInventario(skills, activeCat){
       </div>`;
     }).join('');
 
-  const filtered = activeCat===null ? skills : skills.filter(s=>s.cat===activeCat);
+  const filtered = (activeCat===null ? skills : skills.filter(s=>s.cat===activeCat))
+    .slice().sort((a,b) => (b.core?1:0) - (a.core?1:0));
   document.getElementById('skill-list').innerHTML = filtered.map(s => {
     const fillPct = (s.current/5)*100;
     const targetPct = (s.target/5)*100;
     return `
       <div class="skill-row">
-        <div class="skill-name" title="${s.name}">${s.name}</div>
+        <div class="skill-name-wrap">
+          <span class="skill-name" title="${s.name}">${s.name}</span>
+          ${s.core ? '<span class="core-badge">Core</span>' : ''}
+        </div>
         <div class="bar-wrap">
           <div class="bar-fill" style="width:${fillPct}%;background:${LEVEL_COLORS[s.current]}"></div>
           <div class="bar-target" style="left:${targetPct}%"></div>
@@ -457,7 +511,12 @@ function renderInventario(skills, activeCat){
   }).join('') || '<div class="empty-state">Sin skills en esta categoría</div>';
 }
 
-function setCat(c){ currentCat = c; renderInventario(buildSkills(PEOPLE[currentPerson]), c); }
+function setCat(c){
+  currentCat = c;
+  const skills = buildSkills(PEOPLE[currentPerson]);
+  renderInventario(skills, c);
+  renderCatSidebar(skills);
+}
 
 function renderRadar(skills){
   const cats = catsOf(skills);
