@@ -92,16 +92,27 @@ Services/Dirección, y reportan directamente a **Lucas Davison (CEO)**.
 
 - **Frontend:** HTML/CSS/JS plano, sin build (mismo criterio que los
   otros proyectos de DHNN) + Chart.js vía CDN para el radar.
-- **Backend:** Supabase
-  - Auth: login con Google, restringido a @dhnn.com.
-  - Postgres + Row Level Security: aplica los permisos de la sección 2
-    (cada uno ve lo suyo / su equipo / todo, según rol).
-  - Edge Functions (2): una llama a la **API de Claude** (arma el
-    equipo sugerido), otra llama a la **API de ClickUp** (trae horas
-    activas por persona). Ambas mantienen sus claves secretas del lado
-    del servidor — nunca viajan al navegador.
-- **Hosting:** a definir cuando esté listo para publicar (cualquier
-  hosting estático + el proyecto de Supabase).
+- **Backend:** Postgres propio (VPS, `72.61.219.217`), **no Supabase**.
+  - Ya migrado: schema (`schema.sql`) + datos reales del roster y la
+    estructura de skills (`migrate_data.py`) — ver tablas `people`,
+    `skills`, `person_skills`.
+  - Credenciales en `.env` (nunca en git): `skillmapdba` (admin, crea/
+    altera tablas) y `skillmapuser` (uso normal de la app, permisos
+    limitados vía `GRANT`).
+  - **Pendiente de decidir** (al no tener Supabase, se pierden 3 cosas
+    que daba gratis y hay que resolver aparte):
+    1. **Auth** — Supabase daba login con Google restringido a
+       @dhnn.com. Sin eso, hay que elegir un proveedor de auth o
+       construir uno.
+    2. **Capa de API** — el frontend no puede conectarse directo a
+       Postgres con estas credenciales (quedarían expuestas en el
+       navegador). Hace falta algo en el medio: un servidor propio, o
+       algo como PostgREST autohospedado sobre esta misma base.
+    3. **Permisos por rol** (sección 2: empleado ve lo suyo, líder ve
+       su equipo, People ve todo) — Supabase lo resolvía con Row Level
+       Security atado a `auth.uid()`. Sin Supabase Auth, hay que
+       aplicar esos permisos en la capa de API en vez de en la base.
+- **Hosting:** a definir.
 
 ## 7. Lo que necesito de vos para arrancar a construir
 
