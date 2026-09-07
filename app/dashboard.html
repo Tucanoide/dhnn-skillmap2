@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DHNN · Mi mapa de habilidades</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Mi mapa de habilidades</div>
+        <div class="topbar-subtitle">Autoevaluate: elegí tu nivel actual en cada skill</div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="empty-state">Cargando…</div>
+    </div>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script>
+requireAuth();
+let DATA = null;
+let currentBucket = null;
+let radarChart = null;
+
+function avgByBucket(skills) {
+  return ['core', 'blandas', 'desarrollar'].map(b => {
+    const items = skills.filter(s => s.bucket === b);
+    if (!items.length) return { current: 0, target: 0 };
+    return {
+      current: items.reduce((a, s) => a + s.nivel_actual, 0) / items.length,
+      target: items.reduce((a, s) => a + s.nivel_objetivo, 0) / items.length,
+    };
+  });
+}
+
+function renderHero(persona, skills) {
+  const target = skills.length ? Math.round(skills.reduce((a, s) => a + s.nivel_objetivo, 0) / skills.length) : 0;
+  const current = skills.length ? (skills.reduce((a, s) => a + s.nivel_actual, 0) / skills.length) : 0;
+  const done = skills.filter(s => s.nivel_actual > 0).length;
+  return `
+    <div class="hero">
+      <div class="avatar">${initials(persona.nombre)}</div>
+      <div class="hero-info">
+        <div class="hero-name">${persona.nombre}</div>
+        <div class="hero-role">${persona.rol_puesto} · ${persona.area}</div>
+        <div class="hero-tags">
+          <span class="tag">${persona.banda}${persona.seniority ? ' · ' + persona.seniority : ''}</span>
+        </div>
+      </div>
+      <div class="hero-kpis">
+        <div class="kpi"><div class="kpi-val">${done}/${skills.length}</div><div class="kpi-lbl">Autoevaluadas</div></div>
+        <div class="kpi"><div class="kpi-val">${current.toFixed(1)}</div><div class="kpi-lbl">Nivel promedio</div></div>
+        <div class="kpi"><div class="kpi-val">${target}</div><div class="kpi-lbl">Objetivo</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderStats(skills) {
+  return `
+    <div class="stat-row">
+      ${['core', 'blandas', 'desarrollar'].map(b => {
+        const items = skills.filter(s => s.bucket === b);
+        const meta = BUCKET_META[b];
+        return `
+          <div class="stat-tile" style="--stat-color:${meta.color}">
+            <div class="tile-val">${items.length}</div>
+            <div class="tile-lbl">${meta.label}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderSkillList(skills) {
+  const filtered = currentBucket ? skills.filter(s => s.bucket === currentBucket) : skills;
+  if (!filtered.length) return '<div class="empty-state">No hay skills en esta categoría.</div>';
+  return filtered.map(s => `
+    <div class="skill-row">
+      <div>
+        <div class="skill-name">${s.nombre}</div>
+        <div class="skill-cat">${s.categoria}</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-fill" style="width:${s.nivel_actual / 5 * 100}%;background:${BUCKET_META[s.bucket].color}"></div>
+        <div class="bar-target" style="left:${s.nivel_objetivo / 5 * 100}%"></div>
+      </div>
+      <div class="level-txt">${LEVELS[s.nivel_actual]}</div>
+      <div>
+        <div class="eval-buttons">
+          ${[0,1,2,3,4,5].map(n => `<button class="eval-btn ${s.nivel_actual===n?'active':''}" onclick="setNivel(${s.skill_id},${n})">${n}</button>`).join('')}
+        </div>
+        ${s.lider_validacion_fecha ? `<div class="validated-tag">✓ validado ${s.lider_ajusto ? '(ajustado)' : ''}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRadar(skills) {
+  const avgs = avgByBucket(skills);
+  const ctx = document.getElementById('radarCanvas');
+  if (radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Core', 'Blandas', 'A desarrollar'],
+      datasets: [
+        { label: 'Actual', data: avgs.map(a => a.current), backgroundColor: 'rgba(42,120,214,.15)', borderColor: '#2a78d6', pointBackgroundColor: '#2a78d6' },
+        { label: 'Objetivo', data: avgs.map(a => a.target), backgroundColor: 'rgba(0,0,0,0)', borderColor: '#898781', borderDash: [4,4], pointBackgroundColor: '#898781' },
+      ],
+    },
+    options: { scales: { r: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } },
+  });
+}
+
+async function setNivel(skillId, nivel) {
+  await api(`/me/skills/${skillId}/autoeval`, { method: 'POST', body: JSON.stringify({ nivel_actual: nivel }) });
+  await load();
+}
+
+function selectBucket(b) {
+  currentBucket = currentBucket === b ? null : b;
+  renderAll();
+}
+
+function renderAll() {
+  const { persona, skills } = DATA;
+  document.getElementById('content').innerHTML = `
+    ${renderHero(persona, skills)}
+    ${renderStats(skills)}
+    <div class="grid-6-4" style="display:grid;grid-template-columns:6fr 4fr;gap:12px;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Inventario de skills</div>
+          <div style="display:flex;gap:6px;">
+            ${['core','blandas','desarrollar'].map(b => `<span class="tag" style="cursor:pointer;${currentBucket===b?'background:var(--ink-1);color:#fff;':''}" onclick="selectBucket('${b}')">${BUCKET_META[b].label}</span>`).join('')}
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          ${renderSkillList(skills)}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Radar por categoría</div></div>
+        <div class="card-body" style="display:flex;align-items:center;justify-content:center;">
+          <canvas id="radarCanvas" width="280" height="280"></canvas>
+        </div>
+      </div>
+    </div>
+  `;
+  renderRadar(skills);
+}
+
+async function load() {
+  DATA = await api('/me');
+  document.getElementById('sidebar').innerHTML = renderSidebarShell('dashboard', currentUser());
+  renderAll();
+}
+load().catch(err => {
+  document.getElementById('content').innerHTML = `<div class="error-banner">${err.message}</div>`;
+});
+</script>
+</body>
+</html>
