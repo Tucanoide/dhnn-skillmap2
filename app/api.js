@@ -33,6 +33,28 @@ async function api(path, opts = {}) {
 
 const LEVELS = ['Sin autoevaluar', 'Aprendiz', 'Iniciado', 'Competente', 'Avanzado', 'Maestro'];
 const LEVEL_COLORS = ['#e1e0d9', '#cde2fb', '#86b6ef', '#3987e5', '#256abf', '#0d366b'];
+const LEVEL_DESCRIPTIONS = [
+  'Todavía no evaluaste tu nivel en esta habilidad.',
+  'Conocimientos básicos o teóricos; necesitás guía constante para aplicarlo.',
+  'Podés aplicarlo en tareas simples, con supervisión.',
+  'Lo aplicás de forma autónoma en tu trabajo diario.',
+  'Dominás la habilidad y podés ayudar o guiar a otros.',
+  'Sos referente: definís buenas prácticas y formás a otros.',
+];
+const STALE_DAYS = 90;
+
+function daysSince(dateStr) {
+  if (!dateStr) return Infinity;
+  return Math.floor((Date.now() - new Date(dateStr + 'T00:00:00').getTime()) / 86400000);
+}
+function isStale(dateStr) { return daysSince(dateStr) > STALE_DAYS; }
+function lastUpdateLabel(dateStr) {
+  if (!dateStr) return 'nunca autoevaluada';
+  const d = daysSince(dateStr);
+  if (d === 0) return 'hoy';
+  if (d === 1) return 'hace 1 día';
+  return `hace ${d} días`;
+}
 const BUCKET_META = {
   core: { label: 'Core', color: '#2a78d6' },
   blandas: { label: 'Habilidades blandas', color: '#1baf7a' },

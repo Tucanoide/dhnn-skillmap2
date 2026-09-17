@@ -4,8 +4,9 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 
-from auth import create_token, get_current_user, hash_password, require_admin, verify_password
+from auth import create_token, get_current_user, require_admin, verify_google_credential
 from db import get_conn
+from team_builder import suggest_team
 
 app = FastAPI(title="DHNN Skill Map API")
 
@@ -50,29 +51,19 @@ def can_view_person(user, target_person_row) -> bool:
 
 # ---------------------------------------------------------------- auth
 
-class LoginBody(BaseModel):
-    email: EmailStr
-    password: str
+class GoogleLoginBody(BaseModel):
+    credential: str  # ID token que devuelve Google Identity Services
 
 
-@app.post("/auth/login")
-def login(body: LoginBody):
+@app.post("/auth/google")
+def login_google(body: GoogleLoginBody):
+    email = verify_google_credential(body.credential)
     conn = get_conn()
     try:
         cur = conn.cursor()
-        person = fetch_person_by_email(cur, body.email.lower())
+        person = fetch_person_by_email(cur, email)
         if not person:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Ese email no está en el roster de DHNN")
-
-        if person["password_hash"] is None:
-            # primer login: la contraseña ingresada queda como la nueva contraseña
-            cur.execute(
-                "UPDATE people SET password_hash = %s WHERE id = %s",
-                (hash_password(body.password), person["id"]),
-            )
-            conn.commit()
-        elif not verify_password(body.password, person["password_hash"]):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Contraseña incorrecta")
 
         token = create_token(person)
         return {
@@ -460,6 +451,57 @@ def admin_remove_assign(person_id: int, skill_id: int, user=Depends(require_admi
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Asignación no encontrada")
         conn.commit()
         return {"ok": True}
+    finally:
+        conn.close()
+
+
+@app.get("/admin/skills-overview")
+def admin_skills_overview(user=Depends(require_admin)):
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+              count(*) FILTER (WHERE nivel_actual = 0) AS sin_autoevaluar,
+              count(*) FILTER (WHERE nivel_actual > 0 AND nivel_actual >= nivel_objetivo) AS cubiertas,
+              count(*) FILTER (WHERE nivel_actual > 0 AND nivel_actual < nivel_objetivo) AS a_desarrollar
+            FROM person_skills
+            """
+        )
+        return cur.fetchone()
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------- admin: armado de equipos con IA
+
+class TeamBriefBody(BaseModel):
+    brief: str
+
+
+@app.post("/admin/team-builder")
+def admin_team_builder(body: TeamBriefBody, user=Depends(require_admin)):
+    if not body.brief.strip():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Falta el brief del proyecto")
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id, nombre, rol_puesto, area, banda, seniority FROM people ORDER BY nombre")
+        people = cur.fetchall()
+        people_with_skills = []
+        for p in people:
+            skills = fetch_person_skills(cur, p["id"])
+            if skills:
+                people_with_skills.append({"persona": p, "skills": skills})
+        if not people_with_skills:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "No hay personas con skills cargadas todavía")
+        try:
+            return suggest_team(body.brief, people_with_skills)
+        except KeyError:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Falta configurar ANTHROPIC_API_KEY en el .env")
+        except Exception as e:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Error consultando la IA: {e}")
     finally:
         conn.close()
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DHNN · Mi mapa de habilidades</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="shared.css?v=d8d1ef0b74">
 </head>
 <body>
 <div class="app">
@@ -23,7 +23,7 @@
   </div>
 </div>
 
-<script src="api.js"></script>
+<script src="api.js?v=8d5cd7e93c"></script>
 <script>
 requireAuth();
 let DATA = null;
@@ -94,15 +94,40 @@ function renderSkillList(skills) {
         <div class="bar-fill" style="width:${s.nivel_actual / 5 * 100}%;background:${BUCKET_META[s.bucket].color}"></div>
         <div class="bar-target" style="left:${s.nivel_objetivo / 5 * 100}%"></div>
       </div>
-      <div class="level-txt">${LEVELS[s.nivel_actual]}</div>
+      <div class="level-txt">
+        ${LEVELS[s.nivel_actual]}
+        <div style="font-size:11px;color:${isStale(s.autoeval_fecha) ? 'var(--warn,#b8860b)' : 'var(--ink-2)'};">${lastUpdateLabel(s.autoeval_fecha)}</div>
+      </div>
       <div>
         <div class="eval-buttons">
-          ${[0,1,2,3,4,5].map(n => `<button class="eval-btn ${s.nivel_actual===n?'active':''}" onclick="setNivel(${s.skill_id},${n})">${n}</button>`).join('')}
+          ${[0,1,2,3,4,5].map(n => `<button class="eval-btn ${s.nivel_actual===n?'active':''}" title="${LEVELS[n]}: ${LEVEL_DESCRIPTIONS[n]}" onclick="setNivel(${s.skill_id},${n})">${n}</button>`).join('')}
         </div>
         ${s.lider_validacion_fecha ? `<div class="validated-tag">✓ validado ${s.lider_ajusto ? '(ajustado)' : ''}</div>` : ''}
       </div>
     </div>
   `).join('');
+}
+
+function renderLevelGuide() {
+  return `
+    <details class="card" style="margin-bottom:12px;padding:14px 16px;">
+      <summary style="cursor:pointer;font-weight:600;">¿Qué significa cada nivel?</summary>
+      <div style="display:grid;gap:6px;margin-top:10px;">
+        ${LEVELS.map((label, n) => `<div style="font-size:13px;"><strong>${n} · ${label}:</strong> <span style="color:var(--ink-2);">${LEVEL_DESCRIPTIONS[n]}</span></div>`).join('')}
+      </div>
+    </details>
+  `;
+}
+
+function renderStaleBanner(skills) {
+  const pending = skills.filter(s => isStale(s.autoeval_fecha));
+  if (!pending.length) return '';
+  const nunca = pending.filter(s => !s.autoeval_fecha).length;
+  return `
+    <div class="error-banner" style="background:#fff4d6;border-color:#e8c766;color:#6b5200;margin-bottom:12px;">
+      ⏰ Tenés ${pending.length} habilidad${pending.length === 1 ? '' : 'es'} sin autoevaluar o desactualizada${pending.length === 1 ? '' : 's'} (hace más de ${STALE_DAYS} días)${nunca ? `, ${nunca} nunca autoevaluada${nunca === 1 ? '' : 's'}` : ''}. Dale una vuelta a tu mapa para mantenerlo al día.
+    </div>
+  `;
 }
 
 function renderRadar(skills) {
@@ -136,6 +161,8 @@ function renderAll() {
   const { persona, skills } = DATA;
   document.getElementById('content').innerHTML = `
     ${renderHero(persona, skills)}
+    ${renderStaleBanner(skills)}
+    ${renderLevelGuide()}
     ${renderStats(skills)}
     <div class="grid-6-4" style="display:grid;grid-template-columns:6fr 4fr;gap:12px;">
       <div class="card">

@@ -5,3 +5,6 @@ pyjwt
 bcrypt
 pydantic[email]
 python-multipart
+anthropic
+google-auth
+requests

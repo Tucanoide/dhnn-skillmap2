@@ -5,6 +5,8 @@ import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
 
 from db import load_env
 
@@ -12,8 +14,24 @@ load_env()
 JWT_SECRET = os.environ["JWT_SECRET"]
 JWT_ALG = "HS256"
 TOKEN_TTL_HOURS = 24 * 7
+GOOGLE_CLIENT_ID = os.environ["GOOGLE_CLIENT_ID"]
+ALLOWED_DOMAIN = "dhnn.com"
 
 bearer_scheme = HTTPBearer(auto_error=False)
+_google_request = google_requests.Request()
+
+
+def verify_google_credential(credential: str) -> str:
+    """Valida el ID token de Google (firma + audiencia + dominio) y devuelve el email."""
+    try:
+        payload = google_id_token.verify_oauth2_token(credential, _google_request, GOOGLE_CLIENT_ID)
+    except ValueError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token de Google inválido")
+    if payload.get("hd") != ALLOWED_DOMAIN and not payload.get("email", "").endswith(f"@{ALLOWED_DOMAIN}"):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, f"Solo se permite login con cuentas @{ALLOWED_DOMAIN}")
+    if not payload.get("email_verified"):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Email de Google no verificado")
+    return payload["email"].lower()
 
 
 def hash_password(raw: str) -> str:

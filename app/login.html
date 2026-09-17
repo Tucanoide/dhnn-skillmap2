@@ -4,52 +4,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DHNN · Skill Map · Ingresar</title>
-<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="shared.css?v=d8d1ef0b74">
 </head>
 <body>
 <div class="login-wrap">
   <div class="login-card">
     <h1>DHNN Skill Map</h1>
-    <p id="subtitle">Ingresá con tu email de DHNN. Si es tu primera vez, la contraseña que pongas queda guardada.</p>
+    <p id="subtitle">Ingresá con tu cuenta de Google de DHNN (@dhnn.com).</p>
     <div id="error" class="error-banner" style="display:none;"></div>
-    <form id="loginForm">
-      <div class="form-row">
-        <label>Email</label>
-        <input type="email" id="email" placeholder="nombre@dhnn.com" required>
-      </div>
-      <div class="form-row">
-        <label>Contraseña</label>
-        <input type="password" id="password" required minlength="4">
-      </div>
-      <button class="btn" type="submit" style="width:100%;justify-content:center;" id="submitBtn">Ingresar</button>
-    </form>
+    <div id="gsiButton" style="display:flex;justify-content:center;margin-top:8px;"></div>
   </div>
 </div>
 
-<script src="api.js"></script>
+<script src="api.js?v=8d5cd7e93c"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
+const GOOGLE_CLIENT_ID = '776763017999-rniqqqcskrgnanq8f0iplmdmrp7kb2ss.apps.googleusercontent.com';
+
+async function handleGoogleCredential(response) {
   const errorEl = document.getElementById('error');
-  const btn = document.getElementById('submitBtn');
   errorEl.style.display = 'none';
-  btn.disabled = true; btn.textContent = 'Ingresando…';
   try {
-    const data = await api('/auth/login', {
+    const data = await api('/auth/google', {
       method: 'POST',
-      body: JSON.stringify({
-        email: document.getElementById('email').value.trim().toLowerCase(),
-        password: document.getElementById('password').value,
-      }),
+      body: JSON.stringify({ credential: response.credential }),
     });
     setSession(data);
     window.location.href = 'dashboard.html';
   } catch (err) {
     errorEl.textContent = err.message;
     errorEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Ingresar';
   }
-});
+}
+
+function initGoogleButton() {
+  if (!window.google) { setTimeout(initGoogleButton, 100); return; }
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    hd: 'dhnn.com',
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('gsiButton'),
+    { theme: 'outline', size: 'large', width: 280, text: 'signin_with' }
+  );
+}
+initGoogleButton();
 </script>
 </body>
 </html>
