@@ -60,19 +60,25 @@ persona hoy).
 
 ## 5. Vistas (inspiradas visualmente en el mockup de referencia)
 
-- **Dashboard personal:** hero con datos propios, tiles por categoría,
-  radar comparando nivel actual vs. objetivo, brechas prioritarias, plan
-  de desarrollo (modelo 70/20/10).
+- **Dashboard personal:** hero con datos propios, tiles por categoría
+  (Core / Habilidades blandas / A desarrollar, con anillo de progreso y
+  objetivo promedio), inventario de skills filtrable por categoría (cada
+  skill con su nivel actual, objetivo, estado de validación del líder y
+  selector de nivel), y un gráfico de brecha vs. objetivo (dumbbell chart:
+  nivel actual vs. objetivo por skill, con conteo de skills por debajo del
+  objetivo). Sin radar. Plan de desarrollo (modelo 70/20/10) queda
+  pendiente de diseño.
 - **Vista de equipo (líderes):** el mismo dashboard, navegable por cada
   persona de su equipo, con acción para validar/ajustar niveles.
 - **Armado de equipos con IA:** campo de texto para el brief + resultado
   con las personas sugeridas y el porqué.
 - **Admin (People):** alta de personas, gestión de categorías/skills.
 
-Paleta y layout: se mantiene el estilo del mockup de referencia (fondo
-claro tipo dataviz, sidebar + topbar, tarjetas, gráfico radar con
-Chart.js) — es una herramienta interna distinta al onboarding, no
-necesita la identidad amarillo/negro de ese sitio.
+Paleta y layout: sistema de diseño "glass" (tarjetas translúcidas con
+blur, sidebar tipo rail que se expande al hover, paleta Core=azul /
+Blandas=violeta / A desarrollar=naranja) — es una herramienta interna
+distinta al onboarding, no necesita la identidad amarillo/negro de ese
+sitio.
 
 ## 5.1 Aclaración: liderazgo de Design y PM
 
@@ -91,7 +97,8 @@ Services/Dirección, y reportan directamente a **Lucas Davison (CEO)**.
 ## 6. Stack técnico
 
 - **Frontend:** HTML/CSS/JS plano, sin build (mismo criterio que los
-  otros proyectos de DHNN) + Chart.js vía CDN para el radar.
+  otros proyectos de DHNN). El gráfico de brecha vs. objetivo se dibuja
+  con SVG a mano, sin librerías externas.
 - **Backend:** Postgres propio (VPS, `72.61.219.217`), **no Supabase**.
   - Ya migrado: schema (`schema.sql`) + datos reales del roster y la
     estructura de skills (`migrate_data.py`) — ver tablas `people`,

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS people (
   area            TEXT NOT NULL,
   banda           TEXT NOT NULL,
   seniority       TEXT,
+  tipo            TEXT NOT NULL DEFAULT 'interno' CHECK (tipo IN ('interno', 'freelance')),
   lider_id        INTEGER REFERENCES people(id),
   notas           TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS skills (
   nombre          TEXT NOT NULL,
   categoria       TEXT NOT NULL,
   tipo            TEXT NOT NULL CHECK (tipo IN ('dura', 'blanda', 'ia')),
+  activo          BOOLEAN NOT NULL DEFAULT true,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (nombre, categoria)
 );
@@ -41,6 +43,18 @@ CREATE TABLE IF NOT EXISTS person_skills (
 CREATE INDEX IF NOT EXISTS idx_person_skills_person ON person_skills(person_id);
 CREATE INDEX IF NOT EXISTS idx_person_skills_skill  ON person_skills(skill_id);
 CREATE INDEX IF NOT EXISTS idx_people_lider          ON people(lider_id);
+CREATE INDEX IF NOT EXISTS idx_people_tipo           ON people(tipo);
+
+-- CV más reciente cargado para cada persona/freelancer.
+CREATE TABLE IF NOT EXISTS people_cv (
+  id              SERIAL PRIMARY KEY,
+  person_id       INTEGER NOT NULL UNIQUE REFERENCES people(id) ON DELETE CASCADE,
+  archivo_nombre  TEXT NOT NULL,
+  texto_extraido  TEXT NOT NULL DEFAULT '',
+  creado_en       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_people_cv_person ON people_cv(person_id);
 
 -- El usuario de la app (skillmapuser) necesita permisos explícitos:
 -- por defecto en Postgres solo el dueño (skillmapdba) puede leer/escribir.

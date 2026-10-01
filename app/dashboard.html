@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DHNN · Mi mapa de habilidades</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="stylesheet" href="shared.css?v=d8d1ef0b74">
+<link rel="stylesheet" href="shared.css?v=0aeb852b57">
 </head>
 <body>
 <div class="app">
@@ -23,23 +22,11 @@
   </div>
 </div>
 
-<script src="api.js?v=8d5cd7e93c"></script>
+<script src="api.js?v=89c259c66e"></script>
 <script>
 requireAuth();
 let DATA = null;
 let currentBucket = null;
-let radarChart = null;
-
-function avgByBucket(skills) {
-  return ['core', 'blandas', 'desarrollar'].map(b => {
-    const items = skills.filter(s => s.bucket === b);
-    if (!items.length) return { current: 0, target: 0 };
-    return {
-      current: items.reduce((a, s) => a + s.nivel_actual, 0) / items.length,
-      target: items.reduce((a, s) => a + s.nivel_objetivo, 0) / items.length,
-    };
-  });
-}
 
 function renderHero(persona, skills) {
   const target = skills.length ? Math.round(skills.reduce((a, s) => a + s.nivel_objetivo, 0) / skills.length) : 0;
@@ -47,7 +34,7 @@ function renderHero(persona, skills) {
   const done = skills.filter(s => s.nivel_actual > 0).length;
   return `
     <div class="hero">
-      <div class="avatar">${initials(persona.nombre)}</div>
+      <div class="avatar" style="background:${avatarBg(persona.nombre)};color:var(--ink-1);">${initials(persona.nombre)}</div>
       <div class="hero-info">
         <div class="hero-name">${persona.nombre}</div>
         <div class="hero-role">${persona.rol_puesto} · ${persona.area}</div>
@@ -64,16 +51,33 @@ function renderHero(persona, skills) {
   `;
 }
 
+const BUCKET_TAG = { core: '#Core', blandas: '#Blandas', desarrollar: '#ADesarrollar' };
 function renderStats(skills) {
   return `
     <div class="stat-row">
-      ${['core', 'blandas', 'desarrollar'].map(b => {
+      ${['core', 'blandas', 'desarrollar'].map((b, i) => {
         const items = skills.filter(s => s.bucket === b);
+        const rated = items.filter(s => s.nivel_actual > 0);
+        const avgLevel = rated.length ? rated.reduce((a, s) => a + s.nivel_actual, 0) / rated.length : 0;
+        const avgTarget = items.length ? items.reduce((a, s) => a + s.nivel_objetivo, 0) / items.length : 0;
         const meta = BUCKET_META[b];
+        const dark = i === 2;
         return `
-          <div class="stat-tile" style="--stat-color:${meta.color}">
-            <div class="tile-val">${items.length}</div>
-            <div class="tile-lbl">${meta.label}</div>
+          <div class="stat-tile">
+            <div style="position:relative;z-index:1;font-size:11px;font-weight:650;opacity:.82;letter-spacing:.02em;">${BUCKET_TAG[b]}</div>
+            <div style="position:relative;z-index:1;font-size:15px;font-weight:650;margin-top:1px;">${meta.label}</div>
+            <div style="position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:16px;">
+              <div>
+                <div class="tile-val">${items.length}<span style="font-size:12.5px;font-weight:500;opacity:.85;"> ${items.length === 1 ? 'skill' : 'skills'}</span></div>
+                <div class="tile-lbl" style="margin-top:6px;">${items.length ? 'Objetivo prom. ' + avgTarget.toFixed(1) : 'Sin skills cargadas'}</div>
+              </div>
+              ${ringSvg(avgLevel / 5, {
+                size: 54, stroke: 5,
+                color: dark ? 'rgba(16,20,10,.82)' : 'rgba(255,255,255,.95)',
+                track: dark ? 'rgba(16,20,10,.16)' : 'rgba(255,255,255,.24)',
+                label: `<span style="font-size:13px;font-weight:650;">${rated.length ? avgLevel.toFixed(1) : '—'}</span>`,
+              })}
+            </div>
           </div>
         `;
       }).join('')}
@@ -81,31 +85,104 @@ function renderStats(skills) {
   `;
 }
 
+function validationChip(s) {
+  if (!s.nivel_actual) return `<span class="vchip v-none">🕐 Sin autoevaluar</span>`;
+  if (s.lider_ajusto) return `<span class="vchip v-adj">✎ Ajustada · líder ${s.nivel_actual}</span>`;
+  if (s.lider_validacion_fecha) return `<span class="vchip v-ok">✓ Validada</span>`;
+  return `<span class="vchip v-pend">🕐 Pendiente</span>`;
+}
+
+function levelPicker(skill) {
+  const n = skill.nivel_actual;
+  return `
+    <div class="picker">
+      <span class="picker-ind" style="transform:translateX(${n * 38}px);background:${BUCKET_META[skill.bucket].color};"></span>
+      ${[0,1,2,3,4,5].map(v => `<button class="pk ${v===n?'on':''}" title="${LEVELS[v]}: ${LEVEL_DESCRIPTIONS[v]}" onclick="setNivel(${skill.skill_id},${v})">${v}</button>`).join('')}
+    </div>
+  `;
+}
+
 function renderSkillList(skills) {
   const filtered = currentBucket ? skills.filter(s => s.bucket === currentBucket) : skills;
   if (!filtered.length) return '<div class="empty-state">No hay skills en esta categoría.</div>';
-  return filtered.map(s => `
-    <div class="skill-row">
-      <div>
-        <div class="skill-name">${s.nombre}</div>
-        <div class="skill-cat">${s.categoria}</div>
+  return filtered.map(s => {
+    const color = BUCKET_META[s.bucket].color;
+    const showArea = s.categoria && s.categoria !== 'Habilidades blandas';
+    return `
+    <div class="srow">
+      <div class="srow-top">
+        <span class="dot" style="width:10px;height:10px;border-radius:99px;background:${color};flex:none;"></span>
+        <span class="srow-name">${s.nombre}</span>
+        <span class="tag" style="background:color-mix(in srgb, ${color} 14%, transparent);color:${color};font-weight:650;">${BUCKET_TAG[s.bucket]}</span>
+        ${showArea ? `<span class="tag">${s.categoria}</span>` : ''}
+        <span style="margin-left:auto;">${validationChip(s)}</span>
       </div>
-      <div class="bar-wrap">
-        <div class="bar-fill" style="width:${s.nivel_actual / 5 * 100}%;background:${BUCKET_META[s.bucket].color}"></div>
-        <div class="bar-target" style="left:${s.nivel_objetivo / 5 * 100}%"></div>
-      </div>
-      <div class="level-txt">
-        ${LEVELS[s.nivel_actual]}
-        <div style="font-size:11px;color:${isStale(s.autoeval_fecha) ? 'var(--warn,#b8860b)' : 'var(--ink-2)'};">${lastUpdateLabel(s.autoeval_fecha)}</div>
-      </div>
-      <div>
-        <div class="eval-buttons">
-          ${[0,1,2,3,4,5].map(n => `<button class="eval-btn ${s.nivel_actual===n?'active':''}" title="${LEVELS[n]}: ${LEVEL_DESCRIPTIONS[n]}" onclick="setNivel(${s.skill_id},${n})">${n}</button>`).join('')}
+      <div class="srow-bottom">
+        <div class="bar-wrap" style="flex:1;max-width:360px;">
+          <div class="bar-fill" style="width:${s.nivel_actual / 5 * 100}%;background:${color}"></div>
+          ${s.lider_ajusto ? `<span class="bar-leader" style="left:${s.nivel_actual / 5 * 100}%"></span>` : ''}
+          <div class="bar-target" style="left:${s.nivel_objetivo / 5 * 100}%"></div>
         </div>
-        ${s.lider_validacion_fecha ? `<div class="validated-tag">✓ validado ${s.lider_ajusto ? '(ajustado)' : ''}</div>` : ''}
+        <div class="level-txt" style="min-width:0;">
+          ${s.nivel_actual ? `<strong style="color:var(--ink-1);">${LEVELS[s.nivel_actual]}</strong> · ` : ''}${s.nivel_actual >= s.nivel_objetivo ? `<span style="color:var(--ok);">en objetivo</span>` : `obj. ${s.nivel_objetivo}`} · ${lastUpdateLabel(s.autoeval_fecha)}
+        </div>
+        ${levelPicker(s)}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
+}
+
+function renderGapChart(skills) {
+  const list = skills.filter(s => s.nivel_actual != null);
+  const W = 460, x0 = 14, x1 = W - 14, top = 34, rowH = 62;
+  const H = top + list.length * rowH + 6;
+  const X = v => x0 + (v / 5) * (x1 - x0);
+  const below = list.filter(s => s.nivel_actual < s.nivel_objetivo);
+  const totalGap = below.reduce((a, s) => a + (s.nivel_objetivo - s.nivel_actual), 0);
+  if (!list.length) {
+    return `<div class="card" style="height:100%;"><div class="card-header"><div class="card-title">Brecha vs. objetivo</div></div><div class="card-body"><div class="empty-state">Autoevaluate para ver tu brecha.</div></div></div>`;
+  }
+  return `
+    <div class="card" style="height:100%;">
+      <div class="card-header">
+        <div>
+          <div class="card-title" style="text-transform:none;font-size:15px;letter-spacing:0;">Brecha vs. objetivo</div>
+          <div class="skill-cat" style="margin-top:2px;">Dónde estás y a dónde querés llegar</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;align-items:flex-end;gap:10px;">
+          <span style="font-size:32px;font-weight:650;line-height:1;">${below.length}</span>
+          <p style="font-size:12px;color:var(--ink-muted);line-height:1.5;">${below.length === 1 ? 'skill por debajo' : 'skills por debajo'} del objetivo<br><strong style="color:var(--ink-1);">${totalGap} ${totalGap === 1 ? 'nivel' : 'niveles'} para cerrar la brecha</strong></p>
+        </div>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;margin-top:14px;">
+          ${[0,1,2,3,4,5].map(v => `<line x1="${X(v)}" x2="${X(v)}" y1="${top-8}" y2="${H-4}" stroke="var(--hair)" stroke-width="1"/><text x="${X(v)}" y="${top-16}" text-anchor="middle" font-size="10.5" fill="var(--ink-muted)">${v}</text>`).join('')}
+          ${list.map((s, i) => {
+            const color = BUCKET_META[s.bucket].color;
+            const y = top + i * rowH + 38;
+            const a = Math.min(s.nivel_actual, s.nivel_objetivo), b = Math.max(s.nivel_actual, s.nivel_objetivo);
+            const gap = s.nivel_actual - s.nivel_objetivo;
+            const gapLabel = gap >= 0 ? (gap === 0 ? '✓ en objetivo' : `+${gap} sobre obj.`) : `${gap} nivel${gap === -1 ? '' : 'es'}`;
+            return `
+              <text x="${x0}" y="${y-16}" font-size="12" font-weight="650" fill="var(--ink-1)">${s.nombre}</text>
+              <text x="${x1}" y="${y-16}" font-size="11" font-weight="650" text-anchor="end" fill="${gap >= 0 ? 'var(--ok)' : 'var(--ink-muted)'}">${gapLabel}</text>
+              <line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" stroke="var(--track)" stroke-width="6" stroke-linecap="round"/>
+              <rect x="${X(a)}" y="${y-3}" height="6" rx="3" width="${Math.max(0.01, X(b)-X(a))}" fill="${color}" opacity=".35"/>
+              ${s.lider_ajusto ? `<rect x="${X(s.nivel_actual)-5}" y="${y-5}" width="10" height="10" transform="rotate(45 ${X(s.nivel_actual)} ${y})" fill="var(--glass-strong,#fff)" stroke="var(--ink-1)" stroke-width="1.8" rx="1.5"/>` : ''}
+              <circle cx="${X(s.nivel_objetivo)}" cy="${y}" r="8" fill="var(--glass-strong,#fff)" stroke="var(--ink-1)" stroke-width="2"/>
+              <circle cx="${X(s.nivel_actual)}" cy="${y}" r="6.5" fill="${color}" stroke="var(--glass-strong,#fff)" stroke-width="2"/>
+            `;
+          }).join('')}
+        </svg>
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--ink-muted);">
+          <span>● Tu nivel</span>
+          <span>○ Objetivo</span>
+          <span>◇ Ajustado por líder</span>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderLevelGuide() {
@@ -130,23 +207,6 @@ function renderStaleBanner(skills) {
   `;
 }
 
-function renderRadar(skills) {
-  const avgs = avgByBucket(skills);
-  const ctx = document.getElementById('radarCanvas');
-  if (radarChart) radarChart.destroy();
-  radarChart = new Chart(ctx, {
-    type: 'radar',
-    data: {
-      labels: ['Core', 'Blandas', 'A desarrollar'],
-      datasets: [
-        { label: 'Actual', data: avgs.map(a => a.current), backgroundColor: 'rgba(42,120,214,.15)', borderColor: '#2a78d6', pointBackgroundColor: '#2a78d6' },
-        { label: 'Objetivo', data: avgs.map(a => a.target), backgroundColor: 'rgba(0,0,0,0)', borderColor: '#898781', borderDash: [4,4], pointBackgroundColor: '#898781' },
-      ],
-    },
-    options: { scales: { r: { min: 0, max: 5, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } },
-  });
-}
-
 async function setNivel(skillId, nivel) {
   await api(`/me/skills/${skillId}/autoeval`, { method: 'POST', body: JSON.stringify({ nivel_actual: nivel }) });
   await load();
@@ -164,27 +224,32 @@ function renderAll() {
     ${renderStaleBanner(skills)}
     ${renderLevelGuide()}
     ${renderStats(skills)}
-    <div class="grid-6-4" style="display:grid;grid-template-columns:6fr 4fr;gap:12px;">
+    <div class="grid-6-4" style="display:grid;grid-template-columns:minmax(0,7fr) minmax(280px,4fr);gap:16px;align-items:start;">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Inventario de skills</div>
-          <div style="display:flex;gap:6px;">
-            ${['core','blandas','desarrollar'].map(b => `<span class="tag" style="cursor:pointer;${currentBucket===b?'background:var(--ink-1);color:#fff;':''}" onclick="selectBucket('${b}')">${BUCKET_META[b].label}</span>`).join('')}
+          <div>
+            <div class="card-title" style="text-transform:none;font-size:15px;letter-spacing:0;">Inventario de skills</div>
+            <div class="skill-cat" style="margin-top:2px;">${skills.filter(s=>s.nivel_actual>0).length} de ${skills.length} skills · elegí tu nivel actual en cada una</div>
+          </div>
+          <div style="display:flex;gap:14px;font-size:11px;color:var(--ink-muted);align-items:center;">
+            <span style="display:flex;align-items:center;gap:5px;"><span style="width:2px;height:12px;background:var(--ink-1);display:inline-block;"></span>Objetivo</span>
+            <span style="display:flex;align-items:center;gap:5px;">◇ Nivel del líder</span>
           </div>
         </div>
-        <div class="card-body" style="padding:0;">
+        <div style="padding:14px 22px 0;display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="tag" style="cursor:pointer;${!currentBucket?'background:var(--ink-1);color:#fff;':''}" onclick="selectBucket(null)">Todas ${skills.length}</span>
+          ${['core','blandas','desarrollar'].map(b => {
+            const n = skills.filter(s => s.bucket === b).length;
+            return `<span class="tag" style="cursor:pointer;${currentBucket===b?'background:var(--ink-1);color:#fff;':''}" onclick="selectBucket('${b}')"><span class="dot" style="width:7px;height:7px;border-radius:99px;background:${BUCKET_META[b].color};"></span>&nbsp;${BUCKET_META[b].label} ${n}</span>`;
+          }).join('')}
+        </div>
+        <div class="card-body" style="padding:14px 0 0;">
           ${renderSkillList(skills)}
         </div>
       </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Radar por categoría</div></div>
-        <div class="card-body" style="display:flex;align-items:center;justify-content:center;">
-          <canvas id="radarCanvas" width="280" height="280"></canvas>
-        </div>
-      </div>
+      ${renderGapChart(skills)}
     </div>
   `;
-  renderRadar(skills);
 }
 
 async function load() {

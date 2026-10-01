@@ -2,7 +2,9 @@
 .env.*
 node_modules/
 .DS_Store
+.venv/
 backend/.venv/
 __pycache__/
 *.pyc
 app/_devview.html
+backend/uploads/

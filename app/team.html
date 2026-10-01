@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DHNN · Mi equipo</title>
-<link rel="stylesheet" href="shared.css?v=d8d1ef0b74">
+<link rel="stylesheet" href="shared.css?v=0aeb852b57">
 </head>
 <body>
 <div class="app">
@@ -23,31 +23,52 @@
   </div>
 </div>
 
-<script src="api.js?v=8d5cd7e93c"></script>
+<script src="api.js?v=89c259c66e"></script>
 <script>
 requireAuth();
 let TEAM = [];
 let CURRENT_PERSON = null;
 
+function renderTeamStats() {
+  const withSkills = TEAM.filter(p => p.total > 0);
+  const pct = withSkills.length ? Math.round(withSkills.reduce((a, p) => a + p.autoevaluados / p.total, 0) / withSkills.length * 100) : 0;
+  return `
+    <div class="stat-row">
+      <div class="stat-tile" style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div><div class="tile-val">${TEAM.length}</div><div class="tile-lbl">Personas</div></div>
+        <span style="position:relative;z-index:1;width:36px;height:36px;border-radius:999px;background:rgba(255,255,255,.24);display:grid;place-items:center;">${ICONS.team}</span>
+      </div>
+      <div class="stat-tile" style="display:flex;align-items:flex-start;justify-content:space-between;">
+        <div><div class="tile-val">${pct}<span style="font-size:20px;opacity:.85;">%</span></div><div class="tile-lbl">Skills autoevaluadas (prom.)</div></div>
+        <span style="position:relative;z-index:1;width:36px;height:36px;border-radius:999px;background:rgba(255,255,255,.24);display:grid;place-items:center;">${ICONS.ai}</span>
+      </div>
+    </div>
+  `;
+}
+
 function renderList() {
   document.getElementById('backBtn').style.display = 'none';
   document.getElementById('pageTitle').textContent = currentUser().esAdmin ? 'Todo el equipo' : 'Mi equipo';
   document.getElementById('content').innerHTML = `
+    ${renderTeamStats()}
     <div class="card">
       <div class="card-header"><div class="card-title">Personas (${TEAM.length})</div></div>
       <div class="card-body" style="padding:0;">
         <table class="data-table">
           <thead><tr><th>Nombre</th><th>Puesto</th><th>Área</th><th>Autoevaluación</th><th></th></tr></thead>
           <tbody>
-            ${TEAM.map(p => `
+            ${TEAM.map(p => {
+              const pct = p.total ? p.autoevaluados / p.total : 0;
+              return `
               <tr>
-                <td>${p.nombre}</td>
+                <td><div style="display:flex;align-items:center;gap:10px;"><span class="avatar" style="width:32px;height:32px;border-radius:50%;font-size:11px;background:${avatarBg(p.nombre)};color:var(--ink-1);">${initials(p.nombre)}</span>${p.nombre}</div></td>
                 <td>${p.rol_puesto}</td>
                 <td>${p.area}</td>
-                <td>${p.autoevaluados}/${p.total}</td>
+                <td><div style="display:flex;align-items:center;gap:10px;">${ringSvg(pct, { size: 32, stroke: 3.5, color: p.total && p.autoevaluados === p.total ? 'var(--ok)' : 'var(--core)', label: `<span style="font-size:9px;font-weight:650;">${Math.round(pct*100)}%</span>` })}<span class="num" style="font-weight:600;">${p.autoevaluados}/${p.total}</span></div></td>
                 <td><a onclick="openPerson(${p.id})">Ver / validar →</a></td>
               </tr>
-            `).join('')}
+            `;
+            }).join('')}
           </tbody>
         </table>
       </div>
@@ -68,7 +89,7 @@ function renderPerson() {
   const { persona, skills } = CURRENT_PERSON;
   document.getElementById('content').innerHTML = `
     <div class="hero">
-      <div class="avatar">${initials(persona.nombre)}</div>
+      <div class="avatar" style="background:${avatarBg(persona.nombre)};color:var(--ink-1);">${initials(persona.nombre)}</div>
       <div class="hero-info">
         <div class="hero-name">${persona.nombre}</div>
         <div class="hero-role">${persona.rol_puesto} · ${persona.area}</div>

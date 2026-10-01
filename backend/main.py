@@ -1,12 +1,17 @@
+import base64
+import os
+from pathlib import Path
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 
-from auth import create_token, get_current_user, require_admin, verify_google_credential
+from auth import GOOGLE_CLIENT_ID, create_token, get_current_user, require_admin, verify_google_credential
 from db import get_conn
-from team_builder import suggest_team
+from team_builder import extract_skills_from_cv, suggest_team
+
+CV_UPLOAD_DIR = Path(__file__).resolve().parent / "uploads" / "cvs"
 
 app = FastAPI(title="DHNN Skill Map API")
 
@@ -83,7 +88,7 @@ def me(user=Depends(get_current_user)):
     conn = get_conn()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id FROM people WHERE id=%s", (user["sub"],))
+        cur.execute("SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id, tipo FROM people WHERE id=%s", (user["sub"],))
         person = cur.fetchone()
         if not person:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Persona no encontrada")
@@ -129,10 +134,10 @@ def team(user=Depends(get_current_user)):
     try:
         cur = conn.cursor()
         if user["es_admin"]:
-            cur.execute("SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id FROM people ORDER BY nombre")
+            cur.execute("SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id, tipo FROM people ORDER BY nombre")
         elif user["es_lider"]:
             cur.execute(
-                "SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id FROM people WHERE lider_id = %s ORDER BY nombre",
+                "SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id, tipo FROM people WHERE lider_id = %s ORDER BY nombre",
                 (user["sub"],),
             )
         else:
@@ -157,7 +162,7 @@ def team_member(person_id: int, user=Depends(get_current_user)):
     conn = get_conn()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id FROM people WHERE id=%s", (person_id,))
+        cur.execute("SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id, tipo FROM people WHERE id=%s", (person_id,))
         person = cur.fetchone()
         if not person:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Persona no encontrada")
@@ -218,6 +223,7 @@ class PersonBody(BaseModel):
     lider_id: Optional[int] = None
     es_admin: bool = False
     notas: Optional[str] = None
+    tipo: str = "interno"  # 'interno' | 'freelance'
 
 
 @app.get("/admin/people")
@@ -242,16 +248,18 @@ def admin_list_people(user=Depends(require_admin)):
 
 @app.post("/admin/people")
 def admin_create_person(body: PersonBody, user=Depends(require_admin)):
+    if body.tipo not in ("interno", "freelance"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "tipo debe ser interno o freelance")
     conn = get_conn()
     try:
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO people (nombre, email, rol_puesto, area, banda, seniority, lider_id, es_admin, notas)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id
+            INSERT INTO people (nombre, email, rol_puesto, area, banda, seniority, lider_id, es_admin, notas, tipo)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id
             """,
             (body.nombre, body.email.lower(), body.rol_puesto, body.area, body.banda,
-             body.seniority, body.lider_id, body.es_admin, body.notas),
+             body.seniority, body.lider_id, body.es_admin, body.notas, body.tipo),
         )
         new_id = cur.fetchone()["id"]
         conn.commit()
@@ -265,17 +273,19 @@ def admin_create_person(body: PersonBody, user=Depends(require_admin)):
 
 @app.put("/admin/people/{person_id}")
 def admin_update_person(person_id: int, body: PersonBody, user=Depends(require_admin)):
+    if body.tipo not in ("interno", "freelance"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "tipo debe ser interno o freelance")
     conn = get_conn()
     try:
         cur = conn.cursor()
         cur.execute(
             """
             UPDATE people SET nombre=%s, email=%s, rol_puesto=%s, area=%s, banda=%s,
-                   seniority=%s, lider_id=%s, es_admin=%s, notas=%s
+                   seniority=%s, lider_id=%s, es_admin=%s, notas=%s, tipo=%s
             WHERE id=%s RETURNING id
             """,
             (body.nombre, body.email.lower(), body.rol_puesto, body.area, body.banda,
-             body.seniority, body.lider_id, body.es_admin, body.notas, person_id),
+             body.seniority, body.lider_id, body.es_admin, body.notas, body.tipo, person_id),
         )
         if not cur.fetchone():
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Persona no encontrada")
@@ -299,20 +309,71 @@ def admin_delete_person(person_id: int, user=Depends(require_admin)):
         conn.close()
 
 
+@app.post("/admin/people/{person_id}/cv")
+async def admin_upload_cv(person_id: int, file: UploadFile = File(...), user=Depends(require_admin)):
+    if file.content_type != "application/pdf" and not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "El CV debe ser un PDF")
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "El archivo está vacío")
+
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id FROM people WHERE id=%s", (person_id,))
+        if not cur.fetchone():
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Persona no encontrada")
+
+        cur.execute("SELECT id, nombre, categoria, tipo FROM skills ORDER BY categoria, nombre")
+        skills_catalog = cur.fetchall()
+        if not skills_catalog:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Todavía no hay catálogo de skills cargado")
+
+        pdf_base64 = base64.standard_b64encode(raw).decode("utf-8")
+        try:
+            result = extract_skills_from_cv(pdf_base64, skills_catalog)
+        except KeyError:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Falta configurar ANTHROPIC_API_KEY en el .env")
+        except Exception as e:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Error consultando la IA: {e}")
+
+        # guardar el PDF y el resumen extraído para trazabilidad
+        CV_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        dest = CV_UPLOAD_DIR / f"{person_id}.pdf"
+        dest.write_bytes(raw)
+        cur.execute(
+            """
+            INSERT INTO people_cv (person_id, archivo_nombre, texto_extraido)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (person_id) DO UPDATE SET archivo_nombre=EXCLUDED.archivo_nombre,
+                texto_extraido=EXCLUDED.texto_extraido, creado_en=now()
+            """,
+            (person_id, file.filename, result.get("resumen", "")),
+        )
+        conn.commit()
+        return result
+    finally:
+        conn.close()
+
+
 # ---------------------------------------------------------------- admin: catálogo de skills
 
 class SkillBody(BaseModel):
     nombre: str
     categoria: str
     tipo: str  # 'dura' | 'blanda' | 'ia'
+    activo: bool = True
 
 
 @app.get("/admin/skills")
-def admin_list_skills(user=Depends(require_admin)):
+def admin_list_skills(incluir_inactivas: bool = False, user=Depends(require_admin)):
     conn = get_conn()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT * FROM skills ORDER BY categoria, nombre")
+        if incluir_inactivas:
+            cur.execute("SELECT * FROM skills ORDER BY categoria, nombre")
+        else:
+            cur.execute("SELECT * FROM skills WHERE activo ORDER BY categoria, nombre")
         return cur.fetchall()
     finally:
         conn.close()
@@ -326,8 +387,8 @@ def admin_create_skill(body: SkillBody, user=Depends(require_admin)):
     try:
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO skills (nombre, categoria, tipo) VALUES (%s,%s,%s) RETURNING id",
-            (body.nombre, body.categoria, body.tipo),
+            "INSERT INTO skills (nombre, categoria, tipo, activo) VALUES (%s,%s,%s,%s) RETURNING id",
+            (body.nombre, body.categoria, body.tipo, body.activo),
         )
         new_id = cur.fetchone()["id"]
         conn.commit()
@@ -345,8 +406,8 @@ def admin_update_skill(skill_id: int, body: SkillBody, user=Depends(require_admi
     try:
         cur = conn.cursor()
         cur.execute(
-            "UPDATE skills SET nombre=%s, categoria=%s, tipo=%s WHERE id=%s RETURNING id",
-            (body.nombre, body.categoria, body.tipo, skill_id),
+            "UPDATE skills SET nombre=%s, categoria=%s, tipo=%s, activo=%s WHERE id=%s RETURNING id",
+            (body.nombre, body.categoria, body.tipo, body.activo, skill_id),
         )
         if not cur.fetchone():
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Skill no encontrado")
@@ -487,7 +548,7 @@ def admin_team_builder(body: TeamBriefBody, user=Depends(require_admin)):
     conn = get_conn()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, rol_puesto, area, banda, seniority FROM people ORDER BY nombre")
+        cur.execute("SELECT id, nombre, rol_puesto, area, banda, seniority, tipo FROM people ORDER BY nombre")
         people = cur.fetchall()
         people_with_skills = []
         for p in people:
@@ -509,3 +570,10 @@ def admin_team_builder(body: TeamBriefBody, user=Depends(require_admin)):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/config")
+def config():
+    """Config pública para el frontend estático (nada de esto es secreto: el Client ID
+    de Google está diseñado para viajar al navegador)."""
+    return {"google_client_id": GOOGLE_CLIENT_ID}

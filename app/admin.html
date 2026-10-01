@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DHNN · Administración</title>
-<link rel="stylesheet" href="shared.css?v=d8d1ef0b74">
+<link rel="stylesheet" href="shared.css?v=0aeb852b57">
 </head>
 <body>
 <div class="app">
@@ -23,11 +23,13 @@
   </div>
 </div>
 
-<script src="api.js?v=8d5cd7e93c"></script>
+<script src="api.js?v=89c259c66e"></script>
 <script>
 requireAuth();
 let PEOPLE = [];
 let SKILLS = [];
+let SKILLS_VIEW = [];
+let showAllSkills = false;
 let TEAM_FULL = [];
 let CURRENT_PROFILE = null;
 let currentTab = 'people';
@@ -38,7 +40,6 @@ function tabsBar() {
       <span class="tag" style="cursor:pointer;${currentTab==='people'?'background:var(--ink-1);color:#fff;':''}" onclick="showTab('people')">Personas</span>
       <span class="tag" style="cursor:pointer;${currentTab==='habilidades'?'background:var(--ink-1);color:#fff;':''}" onclick="showTab('habilidades')">Habilidades por persona</span>
       <span class="tag" style="cursor:pointer;${currentTab==='skills'?'background:var(--ink-1);color:#fff;':''}" onclick="showTab('skills')">Catálogo de skills</span>
-      <span class="tag" style="cursor:pointer;${currentTab==='teambuilder'?'background:var(--ink-1);color:#fff;':''}" onclick="showTab('teambuilder')">Armado de equipos (IA)</span>
     </div>
   `;
 }
@@ -50,7 +51,6 @@ function showTab(tab) {
   document.getElementById('pageTitle').textContent = 'Administración';
   if (tab === 'people') renderPeopleTab();
   else if (tab === 'habilidades') renderHabilidadesTab();
-  else if (tab === 'teambuilder') renderTeamBuilderTab();
   else renderSkillsTab();
 }
 
@@ -70,7 +70,7 @@ function renderPeopleTab() {
           <tbody>
             ${PEOPLE.map(p => `
               <tr>
-                <td>${p.nombre}</td><td>${p.rol_puesto}</td><td>${p.area}</td><td>${p.banda}</td>
+                <td><div style="display:flex;align-items:center;gap:10px;"><span class="avatar" style="width:32px;height:32px;border-radius:50%;font-size:11px;background:${avatarBg(p.nombre)};color:var(--ink-1);">${initials(p.nombre)}</span>${p.nombre}</div></td><td>${p.rol_puesto}</td><td>${p.area}</td><td>${p.banda}</td>
                 <td>${p.lider_nombre || '—'}</td><td>${p.es_admin ? '✓' : ''}</td>
                 <td>
                   <a onclick="openPersonForm(${p.id})">Editar</a> ·
@@ -103,7 +103,7 @@ function openPersonForm(id) {
         <div class="form-row"><label>Área</label><input id="f_area" value="${p.area||''}"></div>
         <div class="form-row"><label>Banda</label>
           <select id="f_banda">
-            ${['Staff','Diseñador','Desarrollador','PM','Lead','Management'].map(b => `<option ${p.banda===b?'selected':''}>${b}</option>`).join('')}
+            ${['Staff','Diseñador','Desarrollador','PM','Lead','Management','Freelance'].map(b => `<option ${p.banda===b?'selected':''}>${b}</option>`).join('')}
           </select>
         </div>
         <div class="form-row"><label>Seniority</label><input id="f_seniority" value="${p.seniority||''}" placeholder="Ssr, Sr, Líder…"></div>
@@ -112,6 +112,12 @@ function openPersonForm(id) {
         </div>
         <div class="form-row"><label>Admin (People)</label>
           <select id="f_admin"><option value="false" ${!p.es_admin?'selected':''}>No</option><option value="true" ${p.es_admin?'selected':''}>Sí</option></select>
+        </div>
+        <div class="form-row"><label>Tipo</label>
+          <select id="f_tipo">
+            <option value="interno" ${(p.tipo||'interno')==='interno'?'selected':''}>Interno (equipo DH)</option>
+            <option value="freelance" ${p.tipo==='freelance'?'selected':''}>Freelance / partner</option>
+          </select>
         </div>
       </div>
       <button class="btn" onclick="savePerson(${id||'null'})">Guardar</button>
@@ -129,18 +135,19 @@ async function savePerson(id) {
     seniority: document.getElementById('f_seniority').value || null,
     lider_id: document.getElementById('f_lider').value ? Number(document.getElementById('f_lider').value) : null,
     es_admin: document.getElementById('f_admin').value === 'true',
+    tipo: document.getElementById('f_tipo').value,
   };
   if (id) await api(`/admin/people/${id}`, { method: 'PUT', body: JSON.stringify(body) });
   else await api('/admin/people', { method: 'POST', body: JSON.stringify(body) });
   await loadAll();
-  showTab('people');
+  showTab(currentTab);
 }
 
 async function deletePerson(id) {
   if (!confirm('¿Borrar esta persona y todas sus asignaciones de skills?')) return;
   await api(`/admin/people/${id}`, { method: 'DELETE' });
   await loadAll();
-  showTab('people');
+  showTab(currentTab);
 }
 
 async function openPersonSkills(personId) {
@@ -237,7 +244,7 @@ function renderProfile() {
   const { persona, skills } = CURRENT_PROFILE;
   document.getElementById('content').innerHTML = `
     <div class="hero">
-      <div class="avatar">${initials(persona.nombre)}</div>
+      <div class="avatar" style="background:${avatarBg(persona.nombre)};color:var(--ink-1);">${initials(persona.nombre)}</div>
       <div class="hero-info">
         <div class="hero-name">${persona.nombre}</div>
         <div class="hero-role">${persona.rol_puesto} · ${persona.area}</div>
@@ -274,86 +281,49 @@ async function editProfileSkill(skillId, nivel) {
   await openProfile(CURRENT_PROFILE.persona.id);
 }
 
-// -------------------- ARMADO DE EQUIPOS (IA) --------------------
-
-let LAST_TEAM_RESULT = null;
-
-function renderTeamBuilderTab() {
-  document.getElementById('content').innerHTML = `
-    ${tabsBar()}
-    <div class="card">
-      <div class="card-header"><div class="card-title">Brief del proyecto</div></div>
-      <div class="card-body">
-        <div class="form-row">
-          <label>Describí el proyecto (objetivo, tecnologías, duración, tamaño de equipo si lo sabés)</label>
-          <textarea id="tb_brief" rows="6" style="width:100%;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line);" placeholder="Ej: Necesitamos armar un equipo para una app móvil en React Native, 3 meses, con foco en UX y performance..."></textarea>
-        </div>
-        <button class="btn" id="tb_btn" onclick="generateTeam()">Generar propuesta</button>
-        <div id="tb_error" class="error-banner" style="display:none;margin-top:12px;"></div>
-      </div>
-    </div>
-    <div id="tb_result"></div>
-  `;
-  if (LAST_TEAM_RESULT) renderTeamResult(LAST_TEAM_RESULT);
-}
-
-async function generateTeam() {
-  const brief = document.getElementById('tb_brief').value.trim();
-  const errorEl = document.getElementById('tb_error');
-  const btn = document.getElementById('tb_btn');
-  errorEl.style.display = 'none';
-  if (!brief) { errorEl.textContent = 'Escribí un brief primero.'; errorEl.style.display = 'block'; return; }
-  btn.disabled = true; btn.textContent = 'Pensando…';
-  try {
-    LAST_TEAM_RESULT = await api('/admin/team-builder', { method: 'POST', body: JSON.stringify({ brief }) });
-    renderTeamResult(LAST_TEAM_RESULT);
-  } catch (err) {
-    errorEl.textContent = err.message;
-    errorEl.style.display = 'block';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Generar propuesta';
-  }
-}
-
-function renderTeamResult(result) {
-  document.getElementById('tb_result').innerHTML = `
-    <div class="card">
-      <div class="card-header"><div class="card-title">Equipo sugerido (${result.equipo.length})</div></div>
-      <div class="card-body" style="padding:0;">
-        ${result.resumen ? `<div style="padding:16px;border-bottom:1px solid var(--line);color:var(--ink-2);">${result.resumen}</div>` : ''}
-        ${result.equipo.map(m => `
-          <div class="skill-row" style="grid-template-columns:1fr 160px;">
-            <div>
-              <div class="skill-name">${m.nombre} <span style="font-weight:400;color:var(--ink-2);">— ${m.rol_en_equipo}</span></div>
-              <div class="skill-cat">${m.justificacion}</div>
-            </div>
-            <div><a onclick="openProfile(${m.person_id})">Ver habilidades →</a></div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-    ${result.gaps ? `<div class="error-banner" style="background:#fff4d6;border-color:#e8c766;color:#6b5200;">⚠ Gaps: ${result.gaps}</div>` : ''}
-  `;
-}
-
 // -------------------- SKILLS --------------------
 
+async function toggleShowAllSkills() {
+  showAllSkills = !showAllSkills;
+  SKILLS_VIEW = showAllSkills ? await api('/admin/skills?incluir_inactivas=true') : SKILLS;
+  renderSkillsTab();
+}
+
+async function toggleSkillActivo(id) {
+  const s = SKILLS_VIEW.find(x => x.id === id);
+  await api(`/admin/skills/${id}`, { method: 'PUT', body: JSON.stringify({ nombre: s.nombre, categoria: s.categoria, tipo: s.tipo, activo: !s.activo }) });
+  await loadAll();
+  SKILLS_VIEW = showAllSkills ? await api('/admin/skills?incluir_inactivas=true') : SKILLS;
+  renderSkillsTab();
+}
+
 function renderSkillsTab() {
+  const list = showAllSkills ? SKILLS_VIEW : SKILLS;
   document.getElementById('content').innerHTML = `
     ${tabsBar()}
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Catálogo de skills (${SKILLS.length})</div>
-        <button class="btn" onclick="openSkillForm()">+ Nuevo skill</button>
+        <div class="card-title">Catálogo de skills (${list.length}${showAllSkills ? ' de ' + SKILLS_VIEW.length : ''})</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-muted);cursor:pointer;">
+            <input type="checkbox" ${showAllSkills ? 'checked' : ''} onchange="toggleShowAllSkills()"> Mostrar también las inactivas (legacy)
+          </label>
+          <button class="btn" onclick="openSkillForm()">+ Nuevo skill</button>
+        </div>
       </div>
       <div class="card-body" style="padding:0;">
         <table class="data-table">
-          <thead><tr><th>Nombre</th><th>Categoría</th><th>Tipo</th><th></th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Categoría</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
           <tbody>
-            ${SKILLS.map(s => `
-              <tr>
+            ${list.map(s => `
+              <tr style="${s.activo ? '' : 'opacity:.55;'}">
                 <td>${s.nombre}</td><td>${s.categoria}</td><td>${s.tipo}</td>
-                <td><a onclick="openSkillForm(${s.id})">Editar</a> · <a onclick="deleteSkill(${s.id})" style="color:var(--crit);">Borrar</a></td>
+                <td>${s.activo ? '<span class="validated-tag">Activa</span>' : '<span style="color:var(--ink-muted);font-size:11px;">Inactiva</span>'}</td>
+                <td>
+                  <a onclick="openSkillForm(${s.id})">Editar</a> ·
+                  <a onclick="toggleSkillActivo(${s.id})">${s.activo ? 'Desactivar' : 'Activar'}</a> ·
+                  <a onclick="deleteSkill(${s.id})" style="color:var(--crit);">Borrar</a>
+                </td>
               </tr>
             `).join('')}
           </tbody>
@@ -364,7 +334,7 @@ function renderSkillsTab() {
 }
 
 function openSkillForm(id) {
-  const s = id ? SKILLS.find(x => x.id === id) : {};
+  const s = id ? (showAllSkills ? SKILLS_VIEW : SKILLS).find(x => x.id === id) : { activo: true };
   document.getElementById('backBtn').style.display = 'inline-flex';
   document.getElementById('pageTitle').textContent = id ? 'Editar skill' : 'Nuevo skill';
   document.getElementById('content').innerHTML = `
@@ -374,6 +344,9 @@ function openSkillForm(id) {
       <div class="form-row"><label>Tipo</label>
         <select id="s_tipo">${['dura','blanda','ia'].map(t => `<option ${s.tipo===t?'selected':''}>${t}</option>`).join('')}</select>
       </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-bottom:12px;cursor:pointer;">
+        <input type="checkbox" id="s_activo" ${s.activo ? 'checked' : ''}> Activa (se ofrece para asignar)
+      </label>
       <button class="btn" onclick="saveSkill(${id||'null'})">Guardar</button>
     </div></div>
   `;
@@ -384,6 +357,7 @@ async function saveSkill(id) {
     nombre: document.getElementById('s_nombre').value,
     categoria: document.getElementById('s_categoria').value,
     tipo: document.getElementById('s_tipo').value,
+    activo: document.getElementById('s_activo').checked,
   };
   if (id) await api(`/admin/skills/${id}`, { method: 'PUT', body: JSON.stringify(body) });
   else await api('/admin/skills', { method: 'POST', body: JSON.stringify(body) });

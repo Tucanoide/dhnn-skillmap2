@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DHNN · Skill Map · Ingresar</title>
-<link rel="stylesheet" href="shared.css?v=d8d1ef0b74">
+<link rel="stylesheet" href="shared.css?v=0aeb852b57">
 </head>
 <body>
 <div class="login-wrap">
@@ -16,10 +16,10 @@
   </div>
 </div>
 
-<script src="api.js?v=8d5cd7e93c"></script>
+<script src="api.js?v=89c259c66e"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-const GOOGLE_CLIENT_ID = '776763017999-rniqqqcskrgnanq8f0iplmdmrp7kb2ss.apps.googleusercontent.com';
+let GOOGLE_CLIENT_ID = null;
 
 async function handleGoogleCredential(response) {
   const errorEl = document.getElementById('error');
@@ -38,7 +38,7 @@ async function handleGoogleCredential(response) {
 }
 
 function initGoogleButton() {
-  if (!window.google) { setTimeout(initGoogleButton, 100); return; }
+  if (!window.google || !GOOGLE_CLIENT_ID) { setTimeout(initGoogleButton, 100); return; }
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     callback: handleGoogleCredential,
@@ -49,7 +49,19 @@ function initGoogleButton() {
     { theme: 'outline', size: 'large', width: 280, text: 'signin_with' }
   );
 }
-initGoogleButton();
+
+async function start() {
+  const errorEl = document.getElementById('error');
+  try {
+    const cfg = await fetch(API_BASE + '/config').then(r => r.json());
+    GOOGLE_CLIENT_ID = cfg.google_client_id;
+    initGoogleButton();
+  } catch (err) {
+    errorEl.textContent = 'No se pudo conectar con el servidor. ¿Está corriendo el backend?';
+    errorEl.style.display = 'block';
+  }
+}
+start();
 </script>
 </body>
 </html>
