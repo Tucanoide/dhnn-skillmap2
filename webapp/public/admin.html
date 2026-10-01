@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DHNN · Administración</title>
+<link rel="stylesheet" href="shared.css?v=0aeb852b57">
+</head>
+<body>
+<div class="app">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="pageTitle">Administración</div>
+        <div class="topbar-subtitle">Personas, catálogo de skills y tareas asignadas</div>
+      </div>
+      <button class="btn secondary" id="backBtn" style="display:none;" onclick="showTab(currentTab)">← Volver</button>
+    </div>
+    <div class="content" id="content">
+      <div class="empty-state">Cargando…</div>
+    </div>
+  </div>
+</div>
+
+<script src="api.js?v=89c259c66e"></script>
+<script>
+requireAuth();
+let PEOPLE = [];
+let SKILLS = [];
+let SKILLS_VIEW = [];
+let showAllSkills = false;
+let TEAM_FULL = [];
+let CURRENT_PROFILE = null;
+let currentTab = 'people';
+
+function tabsBar() {
+  return `
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <span class="tag" style="cursor:pointer;${currentTab==='people'?'background:var(--ink-1);color:#fff;':''}" onclick="showTab('people')">Personas</span>
+      <span class="tag" style="cursor:pointer;${currentTab==='habilidades'?'background:var(--ink-1);color:#fff;':''}" onclick="showTab('habilidades')">Habilidades por persona</span>
+      <span class="tag" style="cursor:pointer;${currentTab==='skills'?'background:var(--ink-1);color:#fff;':''}" onclick="showTab('skills')">Catálogo de skills</span>
+    </div>
+  `;
+}
+
+function showTab(tab) {
+  currentTab = tab;
+  CURRENT_PROFILE = null;
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('pageTitle').textContent = 'Administración';
+  if (tab === 'people') renderPeopleTab();
+  else if (tab === 'habilidades') renderHabilidadesTab();
+  else renderSkillsTab();
+}
+
+// -------------------- PERSONAS --------------------
+
+function renderPeopleTab() {
+  document.getElementById('content').innerHTML = `
+    ${tabsBar()}
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Personas (${PEOPLE.length})</div>
+        <button class="btn" onclick="openPersonForm()">+ Nueva persona</button>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table class="data-table">
+          <thead><tr><th>Nombre</th><th>Puesto</th><th>Área</th><th>Banda</th><th>Líder</th><th>Admin</th><th></th></tr></thead>
+          <tbody>
+            ${PEOPLE.map(p => `
+              <tr>
+                <td><div style="display:flex;align-items:center;gap:10px;"><span class="avatar" style="width:32px;height:32px;border-radius:50%;font-size:11px;background:${avatarBg(p.nombre)};color:var(--ink-1);">${initials(p.nombre)}</span>${p.nombre}</div></td><td>${p.rol_puesto}</td><td>${p.area}</td><td>${p.banda}</td>
+                <td>${p.lider_nombre || '—'}</td><td>${p.es_admin ? '✓' : ''}</td>
+                <td>
+                  <a onclick="openPersonForm(${p.id})">Editar</a> ·
+                  <a onclick="openPersonSkills(${p.id})">Tareas</a> ·
+                  <a onclick="deletePerson(${p.id})" style="color:var(--crit);">Borrar</a>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function personOptions(selectedId) {
+  return PEOPLE.map(p => `<option value="${p.id}" ${p.id===selectedId?'selected':''}>${p.nombre}</option>`).join('');
+}
+
+function openPersonForm(id) {
+  const p = id ? PEOPLE.find(x => x.id === id) : {};
+  document.getElementById('backBtn').style.display = 'inline-flex';
+  document.getElementById('pageTitle').textContent = id ? 'Editar persona' : 'Nueva persona';
+  document.getElementById('content').innerHTML = `
+    <div class="card"><div class="card-body">
+      <div class="form-grid">
+        <div class="form-row"><label>Nombre</label><input id="f_nombre" value="${p.nombre||''}"></div>
+        <div class="form-row"><label>Email</label><input id="f_email" value="${p.email||''}"></div>
+        <div class="form-row"><label>Rol / puesto</label><input id="f_rol" value="${p.rol_puesto||''}"></div>
+        <div class="form-row"><label>Área</label><input id="f_area" value="${p.area||''}"></div>
+        <div class="form-row"><label>Banda</label>
+          <select id="f_banda">
+            ${['Staff','Diseñador','Desarrollador','PM','Lead','Management','Freelance'].map(b => `<option ${p.banda===b?'selected':''}>${b}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-row"><label>Seniority</label><input id="f_seniority" value="${p.seniority||''}" placeholder="Ssr, Sr, Líder…"></div>
+        <div class="form-row"><label>Líder directo</label>
+          <select id="f_lider"><option value="">— ninguno —</option>${personOptions(p.lider_id)}</select>
+        </div>
+        <div class="form-row"><label>Admin (People)</label>
+          <select id="f_admin"><option value="false" ${!p.es_admin?'selected':''}>No</option><option value="true" ${p.es_admin?'selected':''}>Sí</option></select>
+        </div>
+        <div class="form-row"><label>Tipo</label>
+          <select id="f_tipo">
+            <option value="interno" ${(p.tipo||'interno')==='interno'?'selected':''}>Interno (equipo DH)</option>
+            <option value="freelance" ${p.tipo==='freelance'?'selected':''}>Freelance / partner</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="savePerson(${id||'null'})">Guardar</button>
+    </div></div>
+  `;
+}
+
+async function savePerson(id) {
+  const body = {
+    nombre: document.getElementById('f_nombre').value,
+    email: document.getElementById('f_email').value,
+    rol_puesto: document.getElementById('f_rol').value,
+    area: document.getElementById('f_area').value,
+    banda: document.getElementById('f_banda').value,
+    seniority: document.getElementById('f_seniority').value || null,
+    lider_id: document.getElementById('f_lider').value ? Number(document.getElementById('f_lider').value) : null,
+    es_admin: document.getElementById('f_admin').value === 'true',
+    tipo: document.getElementById('f_tipo').value,
+  };
+  if (id) await api(`/admin/people/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+  else await api('/admin/people', { method: 'POST', body: JSON.stringify(body) });
+  await loadAll();
+  showTab(currentTab);
+}
+
+async function deletePerson(id) {
+  if (!confirm('¿Borrar esta persona y todas sus asignaciones de skills?')) return;
+  await api(`/admin/people/${id}`, { method: 'DELETE' });
+  await loadAll();
+  showTab(currentTab);
+}
+
+async function openPersonSkills(personId) {
+  const person = PEOPLE.find(p => p.id === personId);
+  const assigned = await api(`/admin/people/${personId}/skills`);
+  document.getElementById('backBtn').style.display = 'inline-flex';
+  document.getElementById('pageTitle').textContent = 'Tareas de ' + person.nombre;
+  const unassignedSkills = SKILLS.filter(s => !assigned.some(a => a.skill_id === s.id));
+  document.getElementById('content').innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Skills asignadas (${assigned.length})</div></div>
+      <div class="card-body" style="padding:0;">
+        ${assigned.map(s => `
+          <div class="skill-row" style="grid-template-columns:1fr 140px 100px 90px;">
+            <div><div class="skill-name">${s.nombre}</div><div class="skill-cat">${s.categoria}</div></div>
+            <select onchange="modifyAssign(${personId},${s.skill_id},this.value,${s.nivel_objetivo})">
+              ${['core','blandas','desarrollar'].map(b => `<option value="${b}" ${s.bucket===b?'selected':''}>${BUCKET_META[b].label}</option>`).join('')}
+            </select>
+            <input type="number" min="1" max="5" value="${s.nivel_objetivo}" style="width:50px;" onchange="modifyAssign(${personId},${s.skill_id},'${s.bucket}',this.value)">
+            <a onclick="removeAssign(${personId},${s.skill_id})" style="color:var(--crit);">Quitar</a>
+          </div>
+        `).join('') || '<div class="empty-state">Sin skills asignadas todavía.</div>'}
+      </div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Agregar tarea (skill)</div></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-row"><label>Skill</label>
+            <select id="add_skill_id">${unassignedSkills.map(s => `<option value="${s.id}">${s.nombre} (${s.categoria})</option>`).join('')}</select>
+          </div>
+          <div class="form-row"><label>Bucket</label>
+            <select id="add_bucket">${['core','blandas','desarrollar'].map(b => `<option value="${b}">${BUCKET_META[b].label}</option>`).join('')}</select>
+          </div>
+          <div class="form-row"><label>Nivel objetivo</label><input type="number" id="add_nivel" min="1" max="5" value="3"></div>
+        </div>
+        <button class="btn" onclick="addAssign(${personId})">Agregar</button>
+      </div>
+    </div>
+  `;
+}
+
+async function addAssign(personId) {
+  const skillId = Number(document.getElementById('add_skill_id').value);
+  const bucket = document.getElementById('add_bucket').value;
+  const nivel = Number(document.getElementById('add_nivel').value);
+  await api(`/admin/people/${personId}/skills`, { method: 'POST', body: JSON.stringify({ skill_id: skillId, bucket, nivel_objetivo: nivel }) });
+  await openPersonSkills(personId);
+}
+async function modifyAssign(personId, skillId, bucket, nivel) {
+  await api(`/admin/people/${personId}/skills/${skillId}`, { method: 'PUT', body: JSON.stringify({ bucket, nivel_objetivo: Number(nivel) }) });
+  await openPersonSkills(personId);
+}
+async function removeAssign(personId, skillId) {
+  if (!confirm('¿Quitar esta tarea/skill de la persona?')) return;
+  await api(`/admin/people/${personId}/skills/${skillId}`, { method: 'DELETE' });
+  await openPersonSkills(personId);
+}
+
+// -------------------- HABILIDADES POR PERSONA --------------------
+
+function renderHabilidadesTab() {
+  document.getElementById('content').innerHTML = `
+    ${tabsBar()}
+    <div class="card">
+      <div class="card-header"><div class="card-title">Todos los perfiles (${TEAM_FULL.length})</div></div>
+      <div class="card-body" style="padding:0;">
+        <table class="data-table">
+          <thead><tr><th>Nombre</th><th>Puesto</th><th>Área</th><th>Autoevaluación</th><th></th></tr></thead>
+          <tbody>
+            ${TEAM_FULL.map(p => `
+              <tr>
+                <td>${p.nombre}</td>
+                <td>${p.rol_puesto}</td>
+                <td>${p.area}</td>
+                <td>${p.autoevaluados}/${p.total}</td>
+                <td><a onclick="openProfile(${p.id})">Ver habilidades →</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function openProfile(id) {
+  CURRENT_PROFILE = await api(`/team/${id}`);
+  document.getElementById('backBtn').style.display = 'inline-flex';
+  document.getElementById('pageTitle').textContent = CURRENT_PROFILE.persona.nombre;
+  renderProfile();
+}
+
+function renderProfile() {
+  const { persona, skills } = CURRENT_PROFILE;
+  document.getElementById('content').innerHTML = `
+    <div class="hero">
+      <div class="avatar" style="background:${avatarBg(persona.nombre)};color:var(--ink-1);">${initials(persona.nombre)}</div>
+      <div class="hero-info">
+        <div class="hero-name">${persona.nombre}</div>
+        <div class="hero-role">${persona.rol_puesto} · ${persona.area}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Skills — autoevaluación y validación</div></div>
+      <div class="card-body" style="padding:0;">
+        ${skills.map(s => `
+          <div class="skill-row" style="grid-template-columns:1fr 100px 130px 220px;">
+            <div>
+              <div class="skill-name">${s.nombre}</div>
+              <div class="skill-cat">${BUCKET_META[s.bucket].label} · ${s.categoria} · objetivo ${s.nivel_objetivo}</div>
+            </div>
+            <div class="level-txt">Autoeval: ${s.nivel_actual}</div>
+            <div class="level-txt">${s.lider_validacion_fecha ? '✓ ' + s.lider_validacion_fecha : 'Sin validar'}</div>
+            <div>
+              <div class="eval-buttons">
+                ${[0,1,2,3,4,5].map(n => `<button class="eval-btn ${s.nivel_actual===n?'active':''}" onclick="editProfileSkill(${s.skill_id},${n})">${n}</button>`).join('')}
+              </div>
+            </div>
+          </div>
+        `).join('') || '<div class="empty-state">Sin skills asignadas todavía.</div>'}
+      </div>
+    </div>
+  `;
+}
+
+async function editProfileSkill(skillId, nivel) {
+  await api(`/team/${CURRENT_PROFILE.persona.id}/skills/${skillId}/validar`, {
+    method: 'POST',
+    body: JSON.stringify({ nivel_actual: nivel, ajustar: true }),
+  });
+  await openProfile(CURRENT_PROFILE.persona.id);
+}
+
+// -------------------- SKILLS --------------------
+
+async function toggleShowAllSkills() {
+  showAllSkills = !showAllSkills;
+  SKILLS_VIEW = showAllSkills ? await api('/admin/skills?incluir_inactivas=true') : SKILLS;
+  renderSkillsTab();
+}
+
+async function toggleSkillActivo(id) {
+  const s = SKILLS_VIEW.find(x => x.id === id);
+  await api(`/admin/skills/${id}`, { method: 'PUT', body: JSON.stringify({ nombre: s.nombre, categoria: s.categoria, tipo: s.tipo, activo: !s.activo }) });
+  await loadAll();
+  SKILLS_VIEW = showAllSkills ? await api('/admin/skills?incluir_inactivas=true') : SKILLS;
+  renderSkillsTab();
+}
+
+function renderSkillsTab() {
+  const list = showAllSkills ? SKILLS_VIEW : SKILLS;
+  document.getElementById('content').innerHTML = `
+    ${tabsBar()}
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Catálogo de skills (${list.length}${showAllSkills ? ' de ' + SKILLS_VIEW.length : ''})</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-muted);cursor:pointer;">
+            <input type="checkbox" ${showAllSkills ? 'checked' : ''} onchange="toggleShowAllSkills()"> Mostrar también las inactivas (legacy)
+          </label>
+          <button class="btn" onclick="openSkillForm()">+ Nuevo skill</button>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table class="data-table">
+          <thead><tr><th>Nombre</th><th>Categoría</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            ${list.map(s => `
+              <tr style="${s.activo ? '' : 'opacity:.55;'}">
+                <td>${s.nombre}</td><td>${s.categoria}</td><td>${s.tipo}</td>
+                <td>${s.activo ? '<span class="validated-tag">Activa</span>' : '<span style="color:var(--ink-muted);font-size:11px;">Inactiva</span>'}</td>
+                <td>
+                  <a onclick="openSkillForm(${s.id})">Editar</a> ·
+                  <a onclick="toggleSkillActivo(${s.id})">${s.activo ? 'Desactivar' : 'Activar'}</a> ·
+                  <a onclick="deleteSkill(${s.id})" style="color:var(--crit);">Borrar</a>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function openSkillForm(id) {
+  const s = id ? (showAllSkills ? SKILLS_VIEW : SKILLS).find(x => x.id === id) : { activo: true };
+  document.getElementById('backBtn').style.display = 'inline-flex';
+  document.getElementById('pageTitle').textContent = id ? 'Editar skill' : 'Nuevo skill';
+  document.getElementById('content').innerHTML = `
+    <div class="card"><div class="card-body">
+      <div class="form-row"><label>Nombre</label><input id="s_nombre" value="${s.nombre||''}"></div>
+      <div class="form-row"><label>Categoría</label><input id="s_categoria" value="${s.categoria||''}"></div>
+      <div class="form-row"><label>Tipo</label>
+        <select id="s_tipo">${['dura','blanda','ia'].map(t => `<option ${s.tipo===t?'selected':''}>${t}</option>`).join('')}</select>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-bottom:12px;cursor:pointer;">
+        <input type="checkbox" id="s_activo" ${s.activo ? 'checked' : ''}> Activa (se ofrece para asignar)
+      </label>
+      <button class="btn" onclick="saveSkill(${id||'null'})">Guardar</button>
+    </div></div>
+  `;
+}
+
+async function saveSkill(id) {
+  const body = {
+    nombre: document.getElementById('s_nombre').value,
+    categoria: document.getElementById('s_categoria').value,
+    tipo: document.getElementById('s_tipo').value,
+    activo: document.getElementById('s_activo').checked,
+  };
+  if (id) await api(`/admin/skills/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+  else await api('/admin/skills', { method: 'POST', body: JSON.stringify(body) });
+  await loadAll();
+  showTab('skills');
+}
+
+async function deleteSkill(id) {
+  if (!confirm('¿Borrar este skill del catálogo? Se quita de todas las personas que lo tengan asignado.')) return;
+  await api(`/admin/skills/${id}`, { method: 'DELETE' });
+  await loadAll();
+  showTab('skills');
+}
+
+async function loadAll() {
+  [PEOPLE, SKILLS, TEAM_FULL] = await Promise.all([api('/admin/people'), api('/admin/skills'), api('/team')]);
+}
+
+async function load() {
+  const user = currentUser();
+  if (!user.esAdmin) {
+    document.getElementById('content').innerHTML = '<div class="error-banner">Esta sección es solo para administradores (People).</div>';
+    return;
+  }
+  document.getElementById('sidebar').innerHTML = renderSidebarShell('admin', user);
+  await loadAll();
+  showTab('people');
+}
+load().catch(err => {
+  document.getElementById('content').innerHTML = `<div class="error-banner">${err.message}</div>`;
+});
+</script>
+</body>
+</html>

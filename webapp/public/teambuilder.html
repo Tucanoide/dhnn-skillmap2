@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DHNN · Armado de equipos (IA)</title>
+<link rel="stylesheet" href="shared.css?v=0aeb852b57">
+<style>
+.mcard{background:var(--glass-a);-webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);border-radius:20px;padding:16px;margin-bottom:10px;box-shadow:inset 0 1px 0 var(--hi), inset 0 0 0 1px var(--glass-edge), var(--shadow);}
+.mcard-top{display:flex;align-items:center;gap:12px;}
+.mcard-avatar{width:40px;height:40px;border-radius:50%;background:var(--core);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.mcard-justif{font-size:12px;color:var(--ink-2);margin-top:8px;line-height:1.5;}
+.mcard-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair);}
+.mcard-detail.open{display:block;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Armado de equipos (IA)</div>
+        <div class="topbar-subtitle">Le contás el proyecto y la IA arma una propuesta de equipo con todo el pool — interno + ecosistema de partners</div>
+      </div>
+    </div>
+    <div class="content" id="content">
+      <div class="empty-state">Cargando…</div>
+    </div>
+  </div>
+</div>
+
+<script src="api.js?v=89c259c66e"></script>
+<script>
+requireAuth();
+let LAST_RESULT = null;
+const DETAIL_CACHE = {};
+let POOL = [];
+const EXAMPLES = [
+  'Necesitamos armar un equipo para una app móvil en React Native, 3 meses, con foco en UX y performance.',
+  'Campaña de lanzamiento de marca con motion y dirección de arte, 6 semanas.',
+  'Estrategia de IA generativa para el negocio, con liderazgo y comunicación con clientes.',
+];
+
+function setExample(text) {
+  document.getElementById('tb_brief').value = text;
+}
+
+function renderPoolAside() {
+  const internos = POOL.filter(p => p.tipo !== 'freelance');
+  const partners = POOL.filter(p => p.tipo === 'freelance');
+  const stack = list => `<div style="display:flex;">${list.map(p => `<span class="avatar" style="display:inline-flex;width:34px;height:34px;border-radius:50%;font-size:11px;margin-right:-8px;box-shadow:0 0 0 2px var(--glass-strong);background:${avatarBg(p.nombre)};color:var(--ink-1);" title="${p.nombre}">${initials(p.nombre)}</span>`).join('')}</div>`;
+  return `
+    <aside class="card" style="padding:20px;flex:none;width:260px;">
+      <div class="card-title" style="margin-bottom:14px;">Pool disponible</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:8px;"><span>Interno</span><span style="color:var(--ink-muted);">${internos.length}</span></div>
+      <div style="margin-bottom:16px;">${internos.length ? stack(internos) : '<span style="font-size:12px;color:var(--ink-muted);">Nadie cargado.</span>'}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:8px;"><span>Ecosistema de partners</span><span style="color:var(--ink-muted);">${partners.length}</span></div>
+      <div style="margin-bottom:16px;">${partners.length ? stack(partners) : '<span style="font-size:12px;color:var(--ink-muted);">Nadie cargado.</span>'}</div>
+      <p style="font-size:11.5px;line-height:1.5;color:var(--ink-muted);">La propuesta usa el nivel autoevaluado de cada persona. Quien no tiene perfil de skills entra por su especialidad.</p>
+    </aside>
+  `;
+}
+
+function renderPage() {
+  document.getElementById('content').innerHTML = `
+    <div class="card" style="padding:26px 30px;">
+      <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+        <div style="flex:1;min-width:280px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="tag" style="background:var(--core);color:#fff;font-weight:700;">IA</span>
+            <div class="hero-name" style="margin:0;">Brief del proyecto</div>
+          </div>
+          <div class="hero-role" style="margin:6px 0 14px;">Contá objetivo, tecnologías/skills necesarias, duración y tamaño de equipo si lo sabés.</div>
+          <textarea id="tb_brief" rows="6" style="width:100%;font:inherit;font-size:13px;padding:14px;border-radius:16px;border:0;box-shadow:inset 0 0 0 1px var(--hair);background:var(--field);" placeholder="Ej: Necesitamos armar un equipo para una app móvil en React Native, 3 meses, con foco en UX y performance..."></textarea>
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+            <span style="font-size:11.5px;color:var(--ink-muted);">Probá con:</span>
+            ${EXAMPLES.map(ex => `<span class="tag" style="cursor:pointer;" onclick="setExample('${ex.replace(/'/g, "\\'")}')">${ex.split(',')[0]}</span>`).join('')}
+          </div>
+          <div style="margin-top:14px;">
+            <button class="btn" id="tb_btn" onclick="generateTeam()">✨ Generar propuesta</button>
+          </div>
+          <div id="tb_error" class="error-banner" style="display:none;margin-top:12px;"></div>
+        </div>
+        ${renderPoolAside()}
+      </div>
+    </div>
+    <div id="tb_result"></div>
+  `;
+  if (LAST_RESULT) renderResult(LAST_RESULT);
+}
+
+async function generateTeam() {
+  const brief = document.getElementById('tb_brief').value.trim();
+  const errorEl = document.getElementById('tb_error');
+  const btn = document.getElementById('tb_btn');
+  errorEl.style.display = 'none';
+  if (!brief) { errorEl.textContent = 'Escribí un brief primero.'; errorEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Pensando…';
+  try {
+    LAST_RESULT = await api('/admin/team-builder', { method: 'POST', body: JSON.stringify({ brief }) });
+    renderResult(LAST_RESULT);
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = '✨ Generar propuesta';
+  }
+}
+
+function renderResult(result) {
+  document.getElementById('tb_result').innerHTML = `
+    <div class="stat-row" style="grid-template-columns:repeat(2,1fr);margin-top:18px;">
+      <div class="stat-tile" style="display:flex;align-items:flex-start;justify-content:space-between;"><div><div class="tile-val">${result.equipo.length}</div><div class="tile-lbl">Personas sugeridas</div></div><span style="position:relative;z-index:1;width:36px;height:36px;border-radius:999px;background:rgba(255,255,255,.24);display:grid;place-items:center;">${ICONS.team}</span></div>
+      <div class="stat-tile" style="display:flex;align-items:flex-start;justify-content:space-between;"><div><div class="tile-val">${result.equipo.filter(m=>m.tipo==='freelance').length}</div><div class="tile-lbl">Del ecosistema de partners</div></div><span style="position:relative;z-index:1;width:36px;height:36px;border-radius:999px;background:rgba(255,255,255,.24);display:grid;place-items:center;">${ICONS.partners}</span></div>
+    </div>
+    ${result.resumen ? `<div class="note-banner">${result.resumen}</div>` : ''}
+    ${result.equipo.map((m, i) => `
+      <div class="mcard">
+        <div class="mcard-top">
+          <div class="mcard-avatar" style="background:${AVATAR_BG[normName(m.nombre)] || (m.tipo === 'freelance' ? 'var(--desarrollar)' : 'var(--core)')};color:${AVATAR_BG[normName(m.nombre)] ? 'var(--ink-1)' : '#fff'};">${initials(m.nombre)}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:13px;">${m.nombre}
+              <span class="tag" style="${m.tipo==='freelance'?'background:var(--desarrollar);color:#fff;border-color:var(--desarrollar);':''}">${m.tipo === 'freelance' ? 'Freelance' : 'Interno'}</span>
+            </div>
+            <div style="font-size:11.5px;color:var(--ink-muted);">${m.rol_en_equipo}</div>
+          </div>
+          <a style="font-size:11.5px;color:var(--core);cursor:pointer;font-weight:600;" onclick="toggleDetail(${i}, ${m.person_id})">Ver skills ▾</a>
+        </div>
+        <div class="mcard-justif">${m.justificacion}</div>
+        <div class="mcard-detail" id="detail_${i}"></div>
+      </div>
+    `).join('')}
+    ${result.gaps ? `<div class="error-banner" style="background:#fff4d6;border-color:#e8c766;color:#6b5200;">⚠ Gaps: ${result.gaps}</div>` : ''}
+  `;
+}
+
+async function toggleDetail(i, personId) {
+  const el = document.getElementById(`detail_${i}`);
+  const opening = !el.classList.contains('open');
+  el.classList.toggle('open');
+  if (!opening) return;
+  if (!DETAIL_CACHE[personId]) {
+    el.innerHTML = '<div style="font-size:11.5px;color:var(--ink-muted);">Cargando…</div>';
+    DETAIL_CACHE[personId] = await api(`/team/${personId}`);
+  }
+  const { skills } = DETAIL_CACHE[personId];
+  el.innerHTML = skills.map(s => `
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;">
+      <span>${s.nombre}</span>
+      <span style="color:var(--ink-muted);">nivel ${s.nivel_actual}/5</span>
+    </div>
+  `).join('') || '<div style="font-size:11.5px;color:var(--ink-muted);">Sin skills cargadas.</div>';
+}
+
+async function load() {
+  const user = currentUser();
+  if (!user.esAdmin) {
+    document.getElementById('content').innerHTML = '<div class="error-banner">Esta sección es solo para administradores (People).</div>';
+    return;
+  }
+  document.getElementById('sidebar').innerHTML = renderSidebarShell('teambuilder', user);
+  POOL = await api('/team');
+  renderPage();
+}
+load().catch(err => {
+  document.getElementById('content').innerHTML = `<div class="error-banner">${err.message}</div>`;
+});
+</script>
+</body>
+</html>
