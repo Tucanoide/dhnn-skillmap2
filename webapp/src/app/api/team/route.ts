@@ -21,8 +21,10 @@ export async function GET(request: Request) {
     }
     for (const p of people as Array<Record<string, unknown>>) {
       const counts = await queryOne<{ autoevaluados: string; total: string }>(
-        `SELECT count(*) FILTER (WHERE nivel_actual > 0) AS autoevaluados, count(*) AS total
-         FROM person_skills WHERE person_id = $1`,
+        `SELECT count(*) FILTER (WHERE ps.nivel_actual > 0) AS autoevaluados, count(*) AS total
+         FROM person_skills ps
+         JOIN skills s ON s.id = ps.skill_id
+         WHERE ps.person_id = $1 AND s.activo`,
         [p.id]
       );
       p.autoevaluados = Number(counts?.autoevaluados ?? 0);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { query, queryOne } from "@/lib/db";
 import { ApiError, requireAdmin } from "@/lib/auth";
@@ -7,6 +7,27 @@ import { extractSkillsFromCv } from "@/lib/team-builder";
 import { handleError } from "@/lib/api-helpers";
 
 const CV_UPLOAD_DIR = path.join(process.cwd(), "uploads", "cvs");
+
+export async function GET(request: Request, { params }: { params: Promise<{ personId: string }> }) {
+  try {
+    requireAdmin(request);
+    const { personId } = await params;
+    const row = await queryOne<{ archivo_nombre: string }>(
+      "SELECT archivo_nombre FROM people_cv WHERE person_id=$1",
+      [personId]
+    );
+    if (!row) throw new ApiError(404, "Esta persona todavía no tiene un CV subido");
+    const buf = await readFile(path.join(CV_UPLOAD_DIR, `${personId}.pdf`));
+    return new NextResponse(new Uint8Array(buf), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="${row.archivo_nombre.replace(/"/g, "")}"`,
+      },
+    });
+  } catch (err) {
+    return handleError(err);
+  }
+}
 
 export async function POST(request: Request, { params }: { params: Promise<{ personId: string }> }) {
   try {

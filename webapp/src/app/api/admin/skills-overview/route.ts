@@ -8,10 +8,12 @@ export async function GET(request: Request) {
     requireAdmin(request);
     const row = await queryOne<{ sin_autoevaluar: string; cubiertas: string; a_desarrollar: string }>(
       `SELECT
-         count(*) FILTER (WHERE nivel_actual = 0) AS sin_autoevaluar,
-         count(*) FILTER (WHERE nivel_actual > 0 AND nivel_actual >= nivel_objetivo) AS cubiertas,
-         count(*) FILTER (WHERE nivel_actual > 0 AND nivel_actual < nivel_objetivo) AS a_desarrollar
-       FROM person_skills`
+         count(*) FILTER (WHERE ps.nivel_actual = 0) AS sin_autoevaluar,
+         count(*) FILTER (WHERE ps.nivel_actual > 0 AND ps.nivel_actual >= ps.nivel_objetivo) AS cubiertas,
+         count(*) FILTER (WHERE ps.nivel_actual > 0 AND ps.nivel_actual < ps.nivel_objetivo) AS a_desarrollar
+       FROM person_skills ps
+       JOIN skills s ON s.id = ps.skill_id
+       WHERE s.activo`
     );
     return NextResponse.json({
       sin_autoevaluar: Number(row?.sin_autoevaluar ?? 0),

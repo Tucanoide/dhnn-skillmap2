@@ -18,7 +18,7 @@ export async function fetchPersonSkills(personId: number) {
             ps.lider_validacion_fecha, ps.lider_ajusto
      FROM person_skills ps
      JOIN skills s ON s.id = ps.skill_id
-     WHERE ps.person_id = $1
+     WHERE ps.person_id = $1 AND s.activo
      ORDER BY ps.bucket, s.categoria, s.nombre`,
     [personId]
   );

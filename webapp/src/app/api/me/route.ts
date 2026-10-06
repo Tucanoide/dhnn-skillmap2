@@ -7,7 +7,9 @@ export async function GET(request: Request) {
   try {
     const user = getCurrentUser(request);
     const persona = await queryOne(
-      "SELECT id, nombre, email, rol_puesto, area, banda, seniority, lider_id, tipo FROM people WHERE id=$1",
+      `SELECT p.id, p.nombre, p.email, p.rol_puesto, p.area, p.banda, p.seniority, p.lider_id, p.tipo, l.nombre AS lider_nombre
+       FROM people p LEFT JOIN people l ON l.id = p.lider_id
+       WHERE p.id=$1`,
       [user.sub]
     );
     if (!persona) throw new ApiError(404, "Persona no encontrada");

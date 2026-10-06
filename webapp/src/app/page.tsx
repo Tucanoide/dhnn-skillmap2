@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getToken } from "@/lib/client-api";
 
 export default function Home() {
+  const router = useRouter();
   useEffect(() => {
-    const token = window.localStorage.getItem("skillmap_token");
-    window.location.href = token ? "/dashboard.html" : "/login.html";
-  }, []);
+    router.replace(getToken() ? "/dashboard" : "/login");
+  }, [router]);
   return null;
 }
